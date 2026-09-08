@@ -113,6 +113,7 @@ table.kampf td.z{text-align:right;font-variant-numeric:tabular-nums}
 .tot{color:var(--rot);font-weight:600}
 .zzt{display:grid;grid-template-columns:repeat(10,1fr);gap:2px;margin-top:8px}
 .zzt button{padding:0;aspect-ratio:1;font-size:15px;border-color:var(--linie)}
+.zzt button.gezogen{background:var(--rot);color:var(--feld);border-color:var(--rot)}
 .schalter{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px}
 .schalter input{width:20px;height:20px;accent-color:var(--rot)}
 .fuss{font-size:12px;color:var(--blass);text-align:center;padding:6px 0 2px;font-style:italic}
@@ -608,6 +609,18 @@ function spalte(cq){
   return 6 + Math.ceil(cq / 2);
 }
 function zeile(z){ return z === 0 ? 9 : z - 1; }
+let letzteZZ = -1;
+function markiereZZ(i){
+  document.querySelectorAll(".zzt button").forEach(b=>b.classList.remove("gezogen"));
+  if(i < 0) return;
+  document.querySelectorAll('.zzt button[data-index="' + i + '"]').forEach(b=>b.classList.add("gezogen"));
+}
+/* Zieht wie im Buch ein Feld der abgedruckten Zufallszahlen-Tabelle */
+function zieheZufallszahl(){
+  letzteZZ = Math.floor(Math.random() * ZZ_TABELLE.length);
+  markiereZZ(letzteZZ);
+  return ZZ_TABELLE[letzteZZ];
+}
 function esc(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 
 /* ---------------- Zustand ---------------- */
@@ -626,7 +639,7 @@ const STANDARD = {
 
 let S = JSON.parse(JSON.stringify(STANDARD));
 const SCHLUESSEL = "aktionsblatt:v1";
-const VERSION = "0.6";
+const VERSION = "0.7";
 const VERSIONSDATUM = "07.09.2026";
 
 /* Speicher: in der Claude-App window.storage, als installierte App der Gerätespeicher */
@@ -1095,7 +1108,7 @@ function kampfrunde(flucht, zahl){
   }
   if(!S.runden.length){ S.feind.apStart = Number(S.feind.ap||0); gegnerMerken(); }
 
-  const zz = (zahl === undefined) ? Math.floor(Math.random()*10) : Number(zahl);
+  const zz = (zahl === undefined) ? zieheZufallszahl() : Number(zahl);
   const cq = ksGesamt() - Number(S.feind.ks||0);
   const paar = KRT[spalte(cq)][zeile(zz)];
   let vFeind = paar[0], vEW = paar[1];
@@ -1123,7 +1136,7 @@ function kampfrunde(flucht, zahl){
 
   const e = document.getElementById("kampfErgebnis");
   e.innerHTML = text; e.classList.remove("blitz"); void e.offsetWidth; e.classList.add("blitz");
-  zeichne(); sichern();
+  zeichne(); markiereZZ(letzteZZ); sichern();
 }
 
 function gegenstandBenutzen(liste,i){
@@ -1276,13 +1289,15 @@ document.addEventListener("click", ev=>{
     zeichne(); sichern(); return;
   }
   if(t.dataset.kampfzz !== undefined){
+    markiereZZ(Number(t.dataset.index));
     kampfrunde(document.getElementById("cbTippFlucht").checked, Number(t.dataset.kampfzz));
     return;
   }
 
-  if(t.id === "zufallBtn"){ document.getElementById("zufallGross").textContent = Math.floor(Math.random()*10); return; }
+  if(t.id === "zufallBtn"){ document.getElementById("zufallGross").textContent = zieheZufallszahl(); return; }
   if(t.dataset.zz !== undefined){
     document.getElementById("zufallGross").textContent = t.dataset.zz;
+    markiereZZ(Number(t.dataset.index));
     window.scrollTo({top:0,behavior:"smooth"});
     return;
   }
@@ -1291,7 +1306,7 @@ document.addEventListener("click", ev=>{
     return;
   }
   if(t.id === "wuerfelnBtn"){
-    const z = Math.floor(Math.random()*10);
+    const z = zieheZufallszahl();
     document.getElementById("wuerfelAnzeige").textContent =
       "Zufallszahl " + z + " – Kampfstärke wäre " + (z+10) + ", Ausdauer wäre " + (z+20) + ".";
     return;
@@ -1388,9 +1403,9 @@ document.addEventListener("input", ev=>{
 (function(){
   [["zzTabelle","zz"],["zzKampf","kampfzz"]].forEach(([id,attr])=>{
     const w = document.getElementById(id);
-    ZZ_TABELLE.forEach(z=>{
+    ZZ_TABELLE.forEach((z,idx)=>{
       const b = document.createElement("button");
-      b.textContent = z; b.dataset[attr] = z;
+      b.textContent = z; b.dataset[attr] = z; b.dataset.index = idx;
       w.appendChild(b);
     });
   });
