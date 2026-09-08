@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Aktionsblatt</title>
 <meta name="theme-color" content="#22201a">
-<meta name="description" content="Aktionsblatt, Rucksack und Kampfprotokoll für die Einsamer-Wolf-Spielbücher.">
+<meta name="description" content="Aktionsblatt, Rucksack, Kampfprotokoll und Karten für die Einsamer-Wolf-Spielbücher.">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon-192.png">
 <link rel="apple-touch-icon" href="./icon-192.png">
@@ -15,7 +15,7 @@
 <style>
 :root{
   --papier:#e7dfcb; --feld:#f6f1e3; --tinte:#22201a; --blass:#6b6355;
-  --linie:#b7ad95; --rot:#a6321f; --siegel:#2f5061;
+  --linie:#b7ad95; --rot:#a6321f; --siegel:#2f5061; --bonus:#5a4a7a;
   --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -26,12 +26,11 @@ h1,h2{font-weight:600;margin:0}
 .kopf{position:relative;margin:14px 0 18px;padding:16px 14px 14px}
 .kopf svg.rahmen{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .kopf h1{font-size:26px;letter-spacing:.18em;text-align:center;margin-bottom:4px}
-.kopf .buch{text-align:center;font-size:13px;color:var(--blass);font-style:italic;margin-bottom:14px}
+.kopf .buch{text-align:center;font-size:13px;color:var(--blass);font-style:italic;margin-bottom:4px}
 .werte{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .wertfeld{border:1px solid var(--tinte);background:var(--feld);padding:8px 8px 10px;text-align:center}
 .wertfeld .titel{font-size:11px;letter-spacing:.13em;color:var(--blass)}
 .wertfeld .zahl{font-size:40px;line-height:1.05;color:var(--rot)}
-.wertfeld .zahl small{font-size:17px;color:var(--blass)}
 .wertfeld .unter{font-size:11px;color:var(--blass);min-height:14px;margin-top:4px}
 .grund{display:flex;align-items:baseline;justify-content:center;gap:6px;margin-top:4px;
   border-top:1px dotted var(--linie);padding-top:5px}
@@ -52,12 +51,18 @@ button.klein{padding:3px 8px;font-size:13px}
 button.stark{background:var(--tinte);color:var(--feld)}
 button.leise{border-color:var(--linie);color:var(--blass)}
 .knopfreihe{display:flex;gap:6px;justify-content:center;margin-top:10px;flex-wrap:wrap}
+.helden{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:6px 0 12px}
+.helden button{font-size:12px;padding:3px 10px;border-color:var(--linie);color:var(--blass);border-radius:11px}
+.helden button[aria-pressed=true]{background:var(--tinte);color:var(--feld);border-color:var(--tinte)}
+.helden button.bonusheld[aria-pressed=true]{background:var(--bonus);border-color:var(--bonus)}
 section.box{border:1px solid var(--tinte);background:var(--feld);margin-bottom:14px}
 section.box>h2{font-size:12px;letter-spacing:.16em;padding:7px 10px;border-bottom:1px solid var(--tinte);
   display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 section.box>h2 span.hinweis{font-size:11px;letter-spacing:0;color:var(--blass);font-style:italic}
 section.box.speziell{border-color:var(--siegel)}
 section.box.speziell>h2{color:var(--siegel);border-bottom-color:var(--siegel)}
+section.box.bonusbox{border-color:var(--bonus)}
+section.box.bonusbox>h2{color:var(--bonus);border-bottom-color:var(--bonus)}
 .inhalt{padding:10px}
 .zeile{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px dotted var(--linie)}
 .zeile:last-child{border-bottom:0}
@@ -94,7 +99,7 @@ label.klein{display:block;font-size:11px;letter-spacing:.1em;color:var(--blass)}
 nav.tabs{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--papier);
   border-top:1px solid var(--tinte);padding-bottom:env(safe-area-inset-bottom);z-index:20}
 nav.tabs button{flex:1;border:0;border-right:1px solid var(--linie);background:transparent;border-radius:0;
-  padding:12px 1px;font-size:12px;letter-spacing:.04em;color:var(--blass)}
+  padding:12px 1px;font-size:11px;letter-spacing:.02em;color:var(--blass)}
 nav.tabs button:last-child{border-right:0}
 nav.tabs button[aria-selected=true]{color:var(--tinte);box-shadow:inset 0 -3px 0 var(--rot)}
 nav.tabs button:active{background:transparent;color:var(--tinte)}
@@ -132,6 +137,14 @@ textarea{border:1px solid var(--linie);min-height:70px;background:var(--papier)}
 .archiv .meta{font-size:12px;color:var(--blass)}
 .archiv .runden{font-size:13px;color:var(--blass);margin-top:4px;display:none}
 .archiv.offen .runden{display:block}
+.kartefeld{position:relative;overflow:hidden;background:#cfc7b0;height:min(64vh,540px);
+  touch-action:none;cursor:grab;border-bottom:1px solid var(--linie)}
+.kartefeld.zieht{cursor:grabbing}
+.karteinhalt{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+.karteinhalt svg{display:block}
+.kartenleiste{display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap;padding:8px}
+.kartenleiste .lupe{font-size:16px;min-width:38px}
+.karteleer{padding:24px 14px;text-align:center;color:var(--blass);font-style:italic;font-size:14px}
 @media (prefers-reduced-motion:no-preference){
   .blitz{animation:blitz .5s ease-out}
   @keyframes blitz{from{background:#f0d9c8}to{background:transparent}}
@@ -141,15 +154,16 @@ textarea{border:1px solid var(--linie);min-height:70px;background:var(--papier)}
 <body>
 
 <div class="kopf">
-  <svg class="rahmen" viewBox="0 0 400 240" preserveAspectRatio="none" aria-hidden="true">
+  <svg class="rahmen" viewBox="0 0 400 260" preserveAspectRatio="none" aria-hidden="true">
     <filter id="riss"><feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="3" seed="7"/>
       <feDisplacementMap in="SourceGraphic" scale="7" xChannelSelector="R" yChannelSelector="G"/></filter>
-    <rect x="4" y="4" width="392" height="232" fill="none" stroke="#22201a" stroke-width="2.2" filter="url(#riss)"/>
-    <rect x="10" y="10" width="380" height="220" fill="none" stroke="#22201a" stroke-width="0.8" filter="url(#riss)"/>
+    <rect x="4" y="4" width="392" height="252" fill="none" stroke="#22201a" stroke-width="2.2" filter="url(#riss)"/>
+    <rect x="10" y="10" width="380" height="240" fill="none" stroke="#22201a" stroke-width="0.8" filter="url(#riss)"/>
   </svg>
-  <h1>AKTIONSBLATT</h1>
+  <h1 id="blattTitel">AKTIONSBLATT</h1>
   <div class="buch" id="buchAnzeige">Buch 1</div>
   <div class="version" id="versionZeile"></div>
+  <div class="helden" id="heldenLeiste"></div>
   <div class="werte">
     <div class="wertfeld">
       <div class="titel">KAMPFSTÄRKE</div>
@@ -163,6 +177,8 @@ textarea{border:1px solid var(--linie);min-height:70px;background:var(--papier)}
       <div class="titel">AUSDAUERPUNKTE</div>
       <input id="apJetzt" class="grosszahl" type="number" inputmode="numeric" aria-label="Ausdauer aktuell">
       <div class="vonzeile" id="apVon">von 0</div>
+      <div class="grund"><span>Grundwert</span>
+        <input id="apMax" type="number" inputmode="numeric" aria-label="Ausdauer Grundwert"></div>
       <div class="unter" id="apHinweis">0 = Tot</div>
     </div>
   </div>
@@ -176,124 +192,132 @@ textarea{border:1px solid var(--linie);min-height:70px;background:var(--papier)}
 </div>
 
 <div class="tabseite aktiv" id="tab-blatt">
-  <section class="box">
-    <h2>KAI-DISZIPLINEN <span class="hinweis" id="dizZaehler">5 Fertigkeiten</span></h2>
-    <div class="inhalt">
-      <div id="dizListe"></div>
-      <div class="knopfreihe" style="justify-content:flex-start">
-        <button class="klein" id="dizPlus">+ Disziplin</button>
+
+  <div id="blattWolf">
+    <section class="box">
+      <h2>KAI-DISZIPLINEN <span class="hinweis" id="dizZaehler">5 Fertigkeiten</span></h2>
+      <div class="inhalt">
+        <div id="dizListe"></div>
+        <div class="knopfreihe" style="justify-content:flex-start">
+          <button class="klein" id="dizPlus">+ Disziplin</button>
+        </div>
+        <div class="eff" style="padding-left:0" id="dizHinweis"></div>
       </div>
-      <div class="eff" style="padding-left:0">Nach jedem abgeschlossenen Buch kommt eine Disziplin dazu.</div>
-    </div>
-  </section>
+    </section>
 
-  <section class="box">
-    <h2>WAFFEN <span class="hinweis">maximal 2</span></h2>
-    <div class="inhalt" id="waffenListe"></div>
-  </section>
+    <section class="box">
+      <h2>WAFFEN <span class="hinweis">maximal 2</span></h2>
+      <div class="inhalt" id="waffenListe"></div>
+    </section>
 
-  <section class="box">
-    <h2>ABSCHNITT &amp; PROVIANT</h2>
-    <div class="inhalt">
-      <div class="zeile">
-        <div class="gname"><div class="t">Aktueller Abschnitt</div>
-          <div class="s" id="heilHinweis">Hier stehen bleiben, wo du aufhörst</div></div>
-        <div class="zaehler">
-          <button class="klein" data-abschnitt="-1">−</button>
-          <input id="abschnittFeld" class="wert" type="number" inputmode="numeric"
-            aria-label="Aktueller Abschnitt" style="width:64px;color:var(--rot);font-size:22px;text-align:center">
-          <button class="klein" data-abschnitt="1">+</button>
+    <section class="box">
+      <h2>ABSCHNITT &amp; PROVIANT</h2>
+      <div class="inhalt">
+        <div class="zeile">
+          <div class="gname"><div class="t">Aktueller Abschnitt</div>
+            <div class="s" id="heilHinweis">Hier stehen bleiben, wo du aufhörst</div></div>
+          <div class="zaehler">
+            <button class="klein" data-abschnitt="-1">−</button>
+            <input id="abschnittFeld" class="wert" type="number" inputmode="numeric"
+              aria-label="Aktueller Abschnitt" style="width:64px;color:var(--rot);font-size:22px;text-align:center">
+            <button class="klein" data-abschnitt="1">+</button>
+          </div>
+        </div>
+        <div class="zeile">
+          <div class="gname"><div class="t">Mahlzeiten</div>
+            <div class="s" id="mahlHinweis">Ohne Mahlzeit −3 AP (entfällt mit Jagd)</div></div>
+          <div class="zaehler">
+            <button class="klein" data-mahl="-1">−</button>
+            <span class="wert" id="mahlWert">0</span>
+            <button class="klein" data-mahl="1">+</button>
+          </div>
+        </div>
+        <div class="knopfreihe" style="justify-content:flex-start">
+          <button class="klein" id="essen">Mahlzeit essen</button>
+          <button class="klein" id="nichtEssen">Nicht essen</button>
+        </div>
+        <label class="schalter"><input type="checkbox" id="cbTasche">
+          Provianttasche – Mahlzeiten belegen keinen Rucksackplatz</label>
+        <div class="zeile" style="margin-top:8px">
+          <div class="gname"><div class="t">Geldbörse</div><div class="s">maximal 50 Goldkronen</div></div>
+          <div class="zaehler">
+            <button class="klein" data-gold="-1">−</button>
+            <span class="wert" id="goldWert">0</span>
+            <button class="klein" data-gold="1">+</button>
+            <button class="klein" data-gold="5">+5</button>
+          </div>
         </div>
       </div>
-      <div class="zeile">
-        <div class="gname"><div class="t">Mahlzeiten</div>
-          <div class="s" id="mahlHinweis">Ohne Mahlzeit −3 AP (entfällt mit Jagd)</div></div>
-        <div class="zaehler">
-          <button class="klein" data-mahl="-1">−</button>
-          <span class="wert" id="mahlWert">0</span>
-          <button class="klein" data-mahl="1">+</button>
-        </div>
-      </div>
-      <div class="knopfreihe" style="justify-content:flex-start">
-        <button class="klein" id="essen">Mahlzeit essen</button>
-        <button class="klein" id="nichtEssen">Nicht essen</button>
-      </div>
-      <label class="schalter"><input type="checkbox" id="cbTasche">
-        Provianttasche – Mahlzeiten belegen keinen Rucksackplatz</label>
-      <div class="zeile" style="margin-top:8px">
-        <div class="gname"><div class="t">Geldbörse</div><div class="s">maximal 50 Goldkronen</div></div>
-        <div class="zaehler">
-          <button class="klein" data-gold="-1">−</button>
-          <span class="wert" id="goldWert">0</span>
-          <button class="klein" data-gold="1">+</button>
-          <button class="klein" data-gold="5">+5</button>
-        </div>
-      </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="box">
-    <h2>NOTIZEN <span class="hinweis" id="notizZaehler"></span></h2>
-    <div class="inhalt">
-      <textarea id="notizNeu" placeholder="Hinweis, Person, Ort, Losung …"></textarea>
-      <div class="knopfreihe" style="justify-content:flex-start">
-        <button class="stark" id="notizSpeichern">Notiz speichern</button>
+    <section class="box">
+      <h2>NOTIZEN <span class="hinweis" id="notizZaehler"></span></h2>
+      <div class="inhalt">
+        <textarea id="notizNeu" placeholder="Hinweis, Person, Ort, Losung …"></textarea>
+        <div class="knopfreihe" style="justify-content:flex-start">
+          <button class="stark" id="notizSpeichern">Notiz speichern</button>
+        </div>
+        <div id="notizListe" style="margin-top:8px"></div>
       </div>
-      <div id="notizListe" style="margin-top:8px"></div>
-    </div>
-  </section>
+    </section>
+  </div>
+
+  <div id="blattBonus"></div>
 </div>
 
 <div class="tabseite" id="tab-rucksack">
-  <section class="box">
-    <h2>RUCKSACK <span class="hinweis" id="rucksackZaehler">0 von 8</span></h2>
-    <div class="inhalt" id="rucksackListe"></div>
-  </section>
+  <div id="rucksackWolf">
+    <section class="box">
+      <h2>RUCKSACK <span class="hinweis" id="rucksackZaehler">0 von 8</span></h2>
+      <div class="inhalt" id="rucksackListe"></div>
+    </section>
 
-  <section class="box speziell">
-    <h2>SPEZIELLE GEGENSTÄNDE <span class="hinweis">zählen nicht zu den 8</span></h2>
-    <div class="inhalt" id="speziellListe"></div>
-  </section>
+    <section class="box speziell">
+      <h2>SPEZIELLE GEGENSTÄNDE <span class="hinweis">zählen nicht zu den 8</span></h2>
+      <div class="inhalt" id="speziellListe"></div>
+    </section>
 
-  <section class="box">
-    <h2>GEGENSTAND HINZUFÜGEN</h2>
-    <div class="inhalt">
-      <div><label class="klein" for="buchWahl" id="buchWahlLabel">Gegenstände aus dem Buch</label>
-        <select id="buchWahl"></select></div>
-      <div style="margin-top:8px"><label class="klein" for="katalogWahl">Schon einmal eingetragen</label>
-        <select id="katalogWahl"></select></div>
-      <div class="hinzu">
-        <div style="flex:2 1 160px"><label class="klein" for="neuName">Name</label>
-          <input id="neuName" type="text" placeholder="z. B. Heiltrank"></div>
-        <div><label class="klein" for="neuTyp">Art</label>
-          <select id="neuTyp">
-            <option value="rucksack">Rucksack</option>
-            <option value="speziell">Spezieller Gegenstand</option>
-          </select></div>
+    <section class="box">
+      <h2>GEGENSTAND HINZUFÜGEN</h2>
+      <div class="inhalt">
+        <div><label class="klein" for="buchWahl" id="buchWahlLabel">Gegenstände aus dem Buch</label>
+          <select id="buchWahl"></select></div>
+        <div style="margin-top:8px"><label class="klein" for="katalogWahl">Schon einmal eingetragen</label>
+          <select id="katalogWahl"></select></div>
+        <div class="hinzu">
+          <div style="flex:2 1 160px"><label class="klein" for="neuName">Name</label>
+            <input id="neuName" type="text" placeholder="z. B. Heiltrank"></div>
+          <div><label class="klein" for="neuTyp">Art</label>
+            <select id="neuTyp">
+              <option value="rucksack">Rucksack</option>
+              <option value="speziell">Spezieller Gegenstand</option>
+            </select></div>
+        </div>
+        <div class="hinzu" style="border:0;padding-top:0">
+          <div><label class="klein" for="neuEffekt">Effekt</label>
+            <select id="neuEffekt">
+              <option value="keiner">kein Effekt</option>
+              <option value="ap">Ausdauer +X (verbraucht sich)</option>
+              <option value="ks">Kampfstärke +X (solange getragen)</option>
+              <option value="apmax">Ausdauer-Grundwert +X (solange getragen)</option>
+              <option value="mahlzeit">Mahlzeit</option>
+            </select></div>
+          <div style="flex:0 1 80px"><label class="klein" for="neuWert">Wert</label>
+            <input id="neuWert" type="number" inputmode="numeric" value="4"></div>
+          <div style="flex:0 1 80px"><label class="klein" for="neuAnzahl">Anzahl</label>
+            <input id="neuAnzahl" type="number" inputmode="numeric" value="1" min="1"></div>
+          <div style="flex:0 0 auto"><button class="stark" id="neuHinzu">Eintragen</button></div>
+        </div>
+        <div class="warn" id="rucksackWarnung"></div>
       </div>
-      <div class="hinzu" style="border:0;padding-top:0">
-        <div><label class="klein" for="neuEffekt">Effekt</label>
-          <select id="neuEffekt">
-            <option value="keiner">kein Effekt</option>
-            <option value="ap">Ausdauer +X (verbraucht sich)</option>
-            <option value="ks">Kampfstärke +X (solange getragen)</option>
-            <option value="apmax">Ausdauer-Grundwert +X (solange getragen)</option>
-            <option value="mahlzeit">Mahlzeit</option>
-          </select></div>
-        <div style="flex:0 1 80px"><label class="klein" for="neuWert">Wert</label>
-          <input id="neuWert" type="number" inputmode="numeric" value="4"></div>
-        <div style="flex:0 1 80px"><label class="klein" for="neuAnzahl">Anzahl</label>
-          <input id="neuAnzahl" type="number" inputmode="numeric" value="1" min="1"></div>
-        <div style="flex:0 0 auto"><button class="stark" id="neuHinzu">Eintragen</button></div>
-      </div>
-      <div class="warn" id="rucksackWarnung"></div>
-    </div>
-  </section>
+    </section>
+  </div>
+  <div id="rucksackBonus"></div>
 </div>
 
 <div class="tabseite" id="tab-kampf">
   <section class="box">
-    <h2>GEGNER</h2>
+    <h2>GEGNER <span class="hinweis" id="kampfHeld"></span></h2>
     <div class="inhalt">
       <div><label class="klein" for="gegnerWahl">Schon bekämpfte Gegner in diesem Buch</label>
         <select id="gegnerWahl"></select></div>
@@ -330,7 +354,7 @@ textarea{border:1px solid var(--linie);min-height:70px;background:var(--papier)}
     <h2>KAMPFPROTOKOLL <span class="hinweis" id="kampfMeta"></span></h2>
     <div class="inhalt protokoll">
       <table class="kampf">
-        <thead><tr><th>Rd.</th><th>Zufall</th><th class="z">Einsamer Wolf</th><th class="z">Feind</th></tr></thead>
+        <thead><tr><th>Rd.</th><th>Zufall</th><th class="z" id="spalteHeld">Einsamer Wolf</th><th class="z">Feind</th></tr></thead>
         <tbody id="protokollBody"></tbody>
       </table>
       <div class="leer" id="protokollLeer">Noch keine Runde ausgetragen.</div>
@@ -340,6 +364,31 @@ textarea{border:1px solid var(--linie);min-height:70px;background:var(--papier)}
   <section class="box">
     <h2>FRÜHERE KÄMPFE <span class="hinweis" id="archivZaehler"></span></h2>
     <div class="inhalt" id="archivListe"></div>
+  </section>
+</div>
+
+<div class="tabseite" id="tab-karte">
+  <section class="box">
+    <h2>KARTE <span class="hinweis" id="karteTitel"></span></h2>
+    <div class="kartefeld" id="karteFeld"><div class="karteinhalt" id="karteInhalt"></div></div>
+    <div class="kartenleiste">
+      <button class="klein lupe" data-zoom="-1" aria-label="kleiner">−</button>
+      <button class="klein lupe" data-zoom="1" aria-label="größer">+</button>
+      <button class="klein leise" id="karteEinpassen">Ganze Karte</button>
+      <span id="karteZoom" style="font-size:12px;color:var(--blass)"></span>
+    </div>
+    <div class="fuss" id="karteFuss" style="padding:0 10px 10px"></div>
+  </section>
+  <section class="box">
+    <h2>ANDERE KARTEN</h2>
+    <div class="inhalt">
+      <div class="knopfreihe" style="justify-content:flex-start" id="karteWahl"></div>
+      <div class="fuss" style="text-align:left;margin-top:8px">
+        Die Karten sind nach den Vorlagen des Mantikore-Verlags neu gezeichnet – vereinfacht,
+        aber mit denselben Namen und Lagen. Ziehen zum Verschieben, zwei Finger zum Zoomen,
+        Doppeltippen für den nächsten Zoomschritt.
+      </div>
+    </div>
   </section>
 </div>
 
@@ -361,7 +410,7 @@ textarea{border:1px solid var(--linie);min-height:70px;background:var(--papier)}
     <div class="inhalt" style="font-size:14px;color:var(--blass)">
       Eigene Kampfstärke plus Boni, minus Kampfstärke des Gegners, ergibt den Kampfquotienten.
       Dazu eine Zufallszahl ziehen; die Kampfresultat-Tabelle nennt den Ausdauerverlust beider Seiten.
-      Wiederholen, bis eine Seite bei 0 steht. Bei Flucht verliert nur der Einsame Wolf Punkte,
+      Wiederholen, bis eine Seite bei 0 steht. Bei Flucht verliert nur der Fliehende Punkte,
       und nur, wenn der Text die Flucht erlaubt.
     </div>
   </section>
@@ -397,6 +446,7 @@ textarea{border:1px solid var(--linie);min-height:70px;background:var(--papier)}
       <div class="knopfreihe" style="justify-content:flex-start">
         <button class="klein leise" id="apVoll2">Ausdauer auf Grundwert setzen</button>
       </div>
+      <div class="fuss" id="erstellHinweis" style="text-align:left"></div>
     </div>
   </section>
 
@@ -437,6 +487,8 @@ textarea{border:1px solid var(--linie);min-height:70px;background:var(--papier)}
     <div class="inhalt" style="font-size:13px;color:var(--blass)">
       Die Gegenstandslisten der Bände 1 bis 5 stammen aus den frei zugänglichen Internet-Ausgaben
       von Project Aon; die deutschen Namen sind übersetzt und lassen sich beim Eintragen ändern.
+      Zahl der Kai-Disziplinen, Bonus-Aktionsblätter und Karten folgen den Downloads des
+      Mantikore-Verlags zur deutschen Ausgabe; die Karten sind neu gezeichnet.
       Gegner trägst du selbst ein – jeder eingetragene Gegner steht danach im Buch-Dropdown bereit.
     </div>
   </section>
@@ -446,6 +498,7 @@ textarea{border:1px solid var(--linie);min-height:70px;background:var(--papier)}
   <button role="tab" aria-selected="true" data-tab="blatt">Blatt</button>
   <button role="tab" aria-selected="false" data-tab="rucksack">Rucksack</button>
   <button role="tab" aria-selected="false" data-tab="kampf">Kampf</button>
+  <button role="tab" aria-selected="false" data-tab="karte">Karte</button>
   <button role="tab" aria-selected="false" data-tab="zufall">Zufall</button>
   <button role="tab" aria-selected="false" data-tab="mehr">Mehr</button>
 </nav>
@@ -481,6 +534,34 @@ const BUCHTITEL = {
   1:"Flight from the Dark", 2:"Feuer über den Wassern", 3:"The Caverns of Kalte",
   4:"The Chasm of Doom", 5:"Shadow on the Sand"
 };
+
+/* Zahl der Kai-Disziplinen laut den Aktionsblättern des Mantikore-Verlags:
+   Buch 1 fünf, danach je Band eine mehr. */
+function disziplinenSoll(buch){ return Math.max(5, Math.min(DISZIPLINEN.length, 4 + Number(buch||1))); }
+
+/* Bonus-Aktionsblätter je Band – eigenständige Charaktere aus den Verlags-Downloads.
+   typ "liste" = nummerierte Zeilen, "text" = eine Zeile, "zahl" = Zähler. */
+const BONUS = {
+  2:[{id:"rhygar", name:"Rhygar", titel:"RHYGARS AKTIONSBLATT",
+      felder:[{k:"faehig", typ:"liste", label:"Ritterliche Fähigkeiten", n:5}]}],
+  3:[{id:"loikymar", name:"Loi-Kymar", titel:"LOI-KYMARS AKTIONSBLATT",
+      felder:[{k:"kraeuter", typ:"liste", label:"Kräuter-Beutel", n:6},
+              {k:"extra", typ:"text", label:"Zusätzlicher Gegenstand"}]}],
+  4:[{id:"dval", name:"Hauptmann D’Val", titel:"D’VALS AKTIONSBLATT",
+      felder:[{k:"faehig", typ:"liste", label:"Fähigkeiten", n:3},
+              {k:"rucksack", typ:"text", label:"Rucksack"},
+              {k:"pfeile", typ:"zahl", label:"Pfeile"}]}],
+  5:[{id:"tipasa", name:"Tipasa", titel:"TIPASAS AKTIONSBLATT",
+      felder:[{k:"wueste", typ:"text", label:"Wüstenkunde"},
+              {k:"waffen", typ:"liste", label:"Waffen", n:2},
+              {k:"speziell", typ:"text", label:"Spezialgegenstände"},
+              {k:"rucksack", typ:"liste", label:"Rucksack", n:8}]}]
+};
+function bonusListe(buch){ return BONUS[buch] || []; }
+function bonusFinden(id){
+  for(const b in BONUS){ const t = BONUS[b].find(x=>x.id===id); if(t) return {def:t, buch:Number(b)}; }
+  return null;
+}
 
 /* Gegenstände je Band. k: "R" Rucksack, "S" speziell. e/w: Effekt und Wert. o: Originalname. */
 const BUCHDINGE = {
@@ -576,7 +657,7 @@ const BUCHDINGE = {
 };
 
 /* Kampfresultat-Tabelle. Spalte 0 = −11 oder niedriger … 12 = +11 oder größer.
-   Je Spalte: Zufallszahl 1..9, dann 0. Wert = [Verlust Feind, Verlust Einsamer Wolf], "T" = Tod. */
+   Je Spalte: Zufallszahl 1..9, dann 0. Wert = [Verlust Feind, Verlust Held], "T" = Tod. */
 const KRT = [
  [[0,"T"],[0,"T"],[0,8],[0,8],[1,7],[2,6],[3,5],[4,4],[5,3],[6,0]],
  [[0,"T"],[0,8],[0,7],[1,7],[2,6],[3,6],[4,5],[5,4],[6,3],[7,0]],
@@ -600,6 +681,870 @@ const ZZ_TABELLE = [
  8,9,2,8,1,3,4,9,7,1, 6,3,0,7,5,0,5,4,6,6,
  7,2,1,4,2,9,6,4,2,6, 0,9,6,4,8,2,8,5,8,3
 ];
+
+/* Karten – nach den Vorlagen des Mantikore-Verlags neu gezeichnet.
+   Zu Band 2 gibt es keine eigene Karte; das Buch spielt im Gebiet der Karte zu Band 1. */
+const KARTEN = {
+  1:{titel:"Die Freien Königreiche des Nördlichen Magnamunds", svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 691" width="940" height="691" font-family="Iowan Old Style, Palatino Linotype, Palatino, Georgia, serif">
+<defs>
+  <symbol id="berg" viewBox="0 0 24 14" overflow="visible">
+    <path d="M1 13 L8 2 L12 7 L15 4 L23 13 Z" fill="#a08b6d" stroke="#5d4d38" stroke-width="1"/>
+    <path d="M8 2 L10.5 6 L8.5 6.5 Z" fill="#e2d7c0"/>
+  </symbol>
+  <symbol id="baum" viewBox="0 0 12 16" overflow="visible">
+    <path d="M6 1 L10 8 L7.5 8 L10.5 14 L1.5 14 L4.5 8 L2 8 Z" fill="#5b7a4b" stroke="#33482a" stroke-width=".8"/>
+  </symbol>
+  <symbol id="burg" viewBox="0 0 20 20" overflow="visible">
+    <rect x="4" y="7" width="12" height="10" fill="#efe7d2" stroke="#3a3226" stroke-width="1.3"/>
+    <path d="M4 7 v-4 h3 v2 h3 v-2 h3 v2 h3 v2" fill="#efe7d2" stroke="#3a3226" stroke-width="1.3"/>
+    <rect x="8.5" y="11" width="3" height="6" fill="#3a3226"/>
+  </symbol>
+  <symbol id="dorf" viewBox="0 0 16 14" overflow="visible">
+    <path d="M2 12 v-5 l6-4 l6 4 v5 z" fill="#efe7d2" stroke="#3a3226" stroke-width="1.2"/>
+    <path d="M6.5 12 v-4 h3 v4" fill="#3a3226"/>
+  </symbol>
+  <pattern id="wellen" width="46" height="26" patternUnits="userSpaceOnUse">
+    <path d="M0 8 q11 -6 23 0 q11 6 23 0 M0 20 q11 -6 23 0 q11 6 23 0" fill="none" stroke="#7d9db0" stroke-width="1.1" opacity=".55"/>
+  </pattern>
+  <filter id="rau"><feTurbulence type="fractalNoise" baseFrequency="0.022" numOctaves="3" seed="11"/>
+    <feDisplacementMap in="SourceGraphic" scale="6" xChannelSelector="R" yChannelSelector="G"/></filter>
+</defs>
+
+<!-- Meer -->
+<rect width="940" height="691" fill="#a9c2ce"/>
+<rect width="940" height="691" fill="url(#wellen)"/>
+
+<!-- Landmasse: Sommerlund, Ödlande, Durenor -->
+<g filter="url(#rau)">
+  <path d="M0 340 L60 325 L118 333 L152 316 L186 297 L226 305 L258 334 L296 352 L314 394
+           L286 424 L302 452 L346 468 L400 476 L450 490 L492 514 L524 534 L560 542 L598 510 L626 462
+           L640 404 L652 352 L672 320 L706 313 L764 318 L824 330 L900 342 L940 350
+           L940 691 L0 691 Z" fill="#c9c096" stroke="#4a4130" stroke-width="2.2"/>
+  <!-- Ödlande -->
+  <path d="M320 546 L420 528 L520 556 L616 556 L690 578 L700 646 L560 664 L410 652 L320 610 Z"
+        fill="#c9a878" opacity=".85"/>
+  <!-- Wüstenhauch Süden -->
+  <path d="M300 640 L640 660 L700 691 L280 691 Z" fill="#c9a878" opacity=".5"/>
+</g>
+
+<!-- Kirlundin-Inseln -->
+<g filter="url(#rau)" fill="#c9c096" stroke="#4a4130" stroke-width="1.8">
+  <path d="M418 262 q22 -4 26 10 q3 14 -12 18 q-16 3 -18 -12 z"/>
+  <path d="M400 292 q16 -6 20 6 q2 11 -10 12 q-13 1 -12 -9 z"/>
+  <path d="M386 314 q14 -3 15 14 q1 16 -10 16 q-11 -1 -10 -16 z"/>
+  <path d="M372 350 q13 -3 14 12 q1 13 -9 13 q-10 0 -9 -13 z"/>
+  <path d="M358 378 q12 -3 13 12 q1 14 -9 14 q-10 0 -8 -14 z"/>
+  <path d="M358 424 q16 -4 18 12 q1 14 -11 14 q-12 0 -11 -14 z"/>
+</g>
+
+<!-- Berge -->
+<g>
+  <!-- Schroffsteingebirge -->
+  <use href="#berg" x="28" y="592" width="46" height="27"/>
+  <use href="#berg" x="66" y="606" width="50" height="29"/>
+  <use href="#berg" x="112" y="618" width="46" height="27"/>
+  <use href="#berg" x="156" y="630" width="50" height="29"/>
+  <use href="#berg" x="204" y="640" width="46" height="27"/>
+  <use href="#berg" x="248" y="648" width="44" height="26"/>
+  <use href="#berg" x="52" y="620" width="40" height="23"/>
+  <use href="#berg" x="132" y="646" width="42" height="24"/>
+  <!-- Westliches Hochland / Kai -->
+  <use href="#berg" x="10" y="360" width="44" height="26"/>
+  <use href="#berg" x="46" y="384" width="48" height="28"/>
+  <use href="#berg" x="14" y="410" width="42" height="24"/>
+  <use href="#berg" x="60" y="440" width="46" height="27"/>
+  <use href="#berg" x="24" y="470" width="44" height="26"/>
+  <use href="#berg" x="70" y="500" width="42" height="24"/>
+  <use href="#berg" x="30" y="530" width="46" height="27"/>
+  <use href="#berg" x="112" y="530" width="42" height="24"/>
+  <!-- Höhenzug östlich Holmgard -->
+  <use href="#berg" x="262" y="536" width="44" height="26"/>
+  <use href="#berg" x="304" y="552" width="46" height="27"/>
+  <use href="#berg" x="348" y="566" width="42" height="24"/>
+  <!-- Durenor-Gebirge / Hammerdal -->
+  <use href="#berg" x="742" y="400" width="50" height="29"/>
+  <use href="#berg" x="786" y="388" width="54" height="31"/>
+  <use href="#berg" x="836" y="404" width="48" height="28"/>
+  <use href="#berg" x="762" y="428" width="46" height="27"/>
+  <use href="#berg" x="812" y="432" width="50" height="29"/>
+  <use href="#berg" x="866" y="428" width="44" height="26"/>
+</g>
+
+<!-- Wälder -->
+<g>
+  <g id="w1">
+    <use href="#baum" x="170" y="356" width="15" height="20"/><use href="#baum" x="188" y="368" width="15" height="20"/>
+    <use href="#baum" x="206" y="356" width="15" height="20"/><use href="#baum" x="222" y="370" width="15" height="20"/>
+    <use href="#baum" x="176" y="382" width="15" height="20"/><use href="#baum" x="200" y="392" width="15" height="20"/>
+    <use href="#baum" x="222" y="396" width="15" height="20"/><use href="#baum" x="240" y="378" width="15" height="20"/>
+    <use href="#baum" x="188" y="410" width="15" height="20"/><use href="#baum" x="212" y="418" width="15" height="20"/>
+  </g>
+  <use href="#baum" x="500" y="418" width="15" height="20"/><use href="#baum" x="522" y="428" width="15" height="20"/>
+  <use href="#baum" x="546" y="416" width="15" height="20"/>
+  <use href="#baum" x="230" y="500" width="15" height="20"/><use href="#baum" x="252" y="512" width="15" height="20"/>
+  <use href="#baum" x="274" y="498" width="15" height="20"/>
+  <!-- Durenor -->
+  <use href="#baum" x="676" y="378" width="15" height="20"/><use href="#baum" x="700" y="396" width="15" height="20"/>
+  <use href="#baum" x="672" y="418" width="15" height="20"/><use href="#baum" x="700" y="440" width="15" height="20"/>
+  <use href="#baum" x="736" y="470" width="15" height="20"/><use href="#baum" x="700" y="486" width="15" height="20"/>
+  <use href="#baum" x="660" y="470" width="15" height="20"/><use href="#baum" x="760" y="500" width="15" height="20"/>
+  <use href="#baum" x="800" y="490" width="15" height="20"/><use href="#baum" x="836" y="470" width="15" height="20"/>
+  <use href="#baum" x="640" y="520" width="15" height="20"/><use href="#baum" x="672" y="540" width="15" height="20"/>
+  <use href="#baum" x="820" y="530" width="15" height="20"/><use href="#baum" x="860" y="510" width="15" height="20"/>
+</g>
+
+<!-- Flüsse -->
+<g fill="none" stroke="#5f88a0" stroke-width="2.6" stroke-linecap="round">
+  <path d="M92 372 q40 -6 62 -14 q14 -6 22 -12"/>
+  <path d="M78 424 q60 6 112 12 q46 5 92 -4"/>
+  <path d="M66 522 q56 -22 116 -30 q56 -8 104 -20"/>
+  <path d="M448 500 q-8 44 -16 72 q-6 24 -4 48"/>
+  <path d="M572 580 q-8 36 -12 56 q-4 18 -2 32"/>
+  <path d="M638 372 q40 4 76 20 q34 14 48 44"/>
+  <path d="M796 470 q-24 42 -44 74 q-16 26 -22 44"/>
+</g>
+
+<!-- Straßen -->
+<g fill="none" stroke="#6b5a44" stroke-width="2.2" stroke-dasharray="7 5" opacity=".85">
+  <path d="M178 350 q4 40 12 62 q10 26 12 60"/>
+  <path d="M202 472 q40 -18 60 -50"/>
+  <path d="M202 480 q-40 60 -50 120"/>
+  <path d="M206 478 q90 6 172 12 q40 3 70 12"/>
+  <path d="M462 500 q44 16 88 36"/>
+  <path d="M562 542 q46 -40 74 -84 q20 -32 30 -76"/>
+  <path d="M566 552 q46 22 106 28 q60 6 110 -32"/>
+  <path d="M700 560 q30 12 46 12"/>
+</g>
+
+<!-- Siedlungen -->
+<g>
+  <use href="#burg" x="160" y="330" width="24" height="24"/>
+  <use href="#burg" x="244" y="326" width="24" height="24"/>
+  <use href="#burg" x="234" y="398" width="24" height="24"/>
+  <use href="#burg" x="188" y="458" width="30" height="30"/>
+  <use href="#burg" x="436" y="482" width="24" height="24"/>
+  <use href="#burg" x="540" y="524" width="24" height="24"/>
+  <use href="#burg" x="638" y="312" width="24" height="24"/>
+  <use href="#burg" x="788" y="432" width="28" height="28"/>
+  <use href="#burg" x="688" y="524" width="24" height="24"/>
+  <use href="#burg" x="678" y="588" width="24" height="24"/>
+  <use href="#dorf" x="562" y="576" width="20" height="18"/>
+  <use href="#dorf" x="726" y="552" width="20" height="18"/>
+  <!-- Kai-Abtei -->
+  <g transform="translate(132,382)">
+    <path d="M0 26 v-16 l8 -10 l8 10 v16 z" fill="#efe7d2" stroke="#3a3226" stroke-width="1.3"/>
+    <path d="M8 0 v10 M4 4 h8" stroke="#8c2f22" stroke-width="2.4"/>
+  </g>
+  <!-- Alema-Brücke -->
+  <path d="M204 434 h22" stroke="#3a3226" stroke-width="3"/>
+  <path d="M208 434 v6 M220 434 v6" stroke="#3a3226" stroke-width="2"/>
+</g>
+
+<!-- Beschriftung -->
+<g fill="#26221a" style="paint-order:stroke;stroke:#efe9db;stroke-width:3.2;stroke-linejoin:round;stroke-opacity:.85">
+  <text x="470" y="120" font-size="30" letter-spacing="5" text-anchor="middle" transform="rotate(-4 470 120)">DIE KULDERSEE</text>
+  <text x="512" y="452" font-size="23" letter-spacing="3" text-anchor="middle" transform="rotate(9 512 452)">GOLF VON DURENOR</text>
+  <text x="150" y="332" font-size="19" letter-spacing="4" text-anchor="middle" transform="rotate(-13 150 332)">SOMMERLUND</text>
+  <text x="756" y="392" font-size="21" letter-spacing="4" text-anchor="middle" transform="rotate(-9 756 392)">DURENOR</text>
+  <text x="404" y="622" font-size="21" letter-spacing="3" text-anchor="middle" transform="rotate(-5 404 622)">Die Ödlande</text>
+  <text x="196" y="608" font-size="17" letter-spacing="1" text-anchor="middle" transform="rotate(13 196 608)">Schroffsteingebirge</text>
+  <text x="784" y="482" font-size="19" letter-spacing="3" text-anchor="middle" transform="rotate(8 784 482)">HAMMERDAL</text>
+  <text x="456" y="348" font-size="13" text-anchor="middle" transform="rotate(74 456 348)">Die Kirlundin-Inseln</text>
+
+  <g font-size="14">
+    <text x="156" y="350" text-anchor="end">Toran</text>
+    <text x="240" y="350" text-anchor="end">Anskaven</text>
+    <text x="128" y="404" text-anchor="end">Kai</text>
+    <text x="128" y="420" text-anchor="end">Abtei</text>
+    <text x="262" y="414" >Tyso</text>
+    <text x="176" y="428" font-size="12" text-anchor="end">Alema-</text>
+    <text x="176" y="440" font-size="12" text-anchor="end">brücke</text>
+    <text x="204" y="500" font-size="19" letter-spacing="2">HOLMGARD</text>
+    <text x="432" y="478" text-anchor="end" font-size="16" letter-spacing="1">RAGADORN</text>
+    <text x="534" y="518" text-anchor="end" font-size="16" letter-spacing="1">BAXHAVEN</text>
+    <text x="664" y="326">Lof</text>
+    <text x="684" y="534" text-anchor="end">Blave</text>
+    <text x="722" y="566" text-anchor="end">Verlik</text>
+    <text x="706" y="600">Ryme</text>
+    <text x="558" y="588" text-anchor="end">Gorn</text>
+    <text x="700" y="624" font-size="13">Die Rymerbucht</text>
+    <text x="426" y="272" font-size="12">Broka</text>
+    <text x="396" y="292" font-size="12" text-anchor="end">Egen</text>
+    <text x="380" y="318" font-size="12" text-anchor="end">Thet</text>
+    <text x="366" y="356" font-size="12" text-anchor="end">Hemd</text>
+    <text x="352" y="386" font-size="12" text-anchor="end">Kirlu</text>
+    <text x="352" y="440" font-size="12" text-anchor="end">Mannon</text>
+  </g>
+  <g font-size="12" font-style="italic" fill="#3e5568">
+    <text x="58" y="360">Fluss Tor</text>
+    <text x="70" y="454">Fluss Unoram</text>
+    <text x="60" y="556">Fluss Eledil</text>
+    <text x="438" y="556" transform="rotate(76 438 556)">Fluss Dorn</text>
+    <text x="564" y="612" transform="rotate(76 564 612)">Rattenfluss</text>
+    <text x="654" y="368">Fluss Durenor</text>
+    <text x="784" y="500" transform="rotate(62 784 500)">Hammerdalfluss</text>
+  </g>
+  <text x="302" y="636" font-size="13">Moyturapass</text>
+</g>
+
+<!-- Kompass -->
+<g transform="translate(792,168)">
+  <circle r="34" fill="#e7dfcb" fill-opacity=".55" stroke="#4a4130" stroke-width="1.6"/>
+  <path d="M0 -30 L7 -6 L0 0 L-7 -6 Z M0 30 L7 6 L0 0 L-7 6 Z M-30 0 L-6 -7 L0 0 L-6 7 Z M30 0 L6 -7 L0 0 L6 7 Z"
+        fill="#4a4130"/>
+  <path d="M0 -30 L7 -6 L0 0 Z M30 0 L6 7 L0 0 Z" fill="#8c2f22"/>
+  <text y="-38" font-size="12" text-anchor="middle" fill="#26221a">N</text>
+</g>
+
+<!-- Maßstab -->
+<g transform="translate(44,74)">
+  <text y="-6" font-size="12" fill="#26221a">Skala in Meilen</text>
+  <g stroke="#3a3226" stroke-width="1">
+    <rect x="0" y="0" width="22" height="9" fill="#8c2f22"/><rect x="22" y="0" width="22" height="9" fill="#efe7d2"/>
+    <rect x="44" y="0" width="22" height="9" fill="#8c2f22"/><rect x="66" y="0" width="22" height="9" fill="#efe7d2"/>
+  </g>
+  <g font-size="10" fill="#26221a" text-anchor="middle">
+    <text x="0" y="21">0</text><text x="22" y="21">20</text><text x="44" y="21">40</text><text x="66" y="21">60</text><text x="88" y="21">80</text>
+  </g>
+</g>
+</svg>`},
+  3:{titel:"Die Eiswüsten von Kulde", svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 708" width="1000" height="708" font-family="Iowan Old Style, Palatino Linotype, Palatino, Georgia, serif">
+<defs>
+  <symbol id="eisberg" viewBox="0 0 26 15" overflow="visible">
+    <path d="M1 14 L9 2 L13 8 L16 4 L25 14 Z" fill="#dbe6ec" stroke="#5f7480" stroke-width="1"/>
+    <path d="M9 2 L12 7.4 L9.6 8 Z" fill="#fbfdfe"/>
+  </symbol>
+  <symbol id="burg3" viewBox="0 0 20 20" overflow="visible">
+    <rect x="4" y="7" width="12" height="10" fill="#f2f6f8" stroke="#39434a" stroke-width="1.3"/>
+    <path d="M4 7 v-4 h3 v2 h3 v-2 h3 v2 h3 v2" fill="#f2f6f8" stroke="#39434a" stroke-width="1.3"/>
+    <rect x="8.5" y="11" width="3" height="6" fill="#39434a"/>
+  </symbol>
+  <pattern id="wellen3" width="48" height="28" patternUnits="userSpaceOnUse">
+    <path d="M0 9 q12 -6 24 0 q12 6 24 0 M0 22 q12 -6 24 0 q12 6 24 0" fill="none" stroke="#7d7fa6" stroke-width="1.1" opacity=".5"/>
+  </pattern>
+  <filter id="rau3"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" seed="5"/>
+    <feDisplacementMap in="SourceGraphic" scale="6" xChannelSelector="R" yChannelSelector="G"/></filter>
+</defs>
+
+<!-- Meer -->
+<rect width="1000" height="708" fill="#9598bd"/>
+<rect width="1000" height="708" fill="url(#wellen3)"/>
+
+<!-- Landeis / Kalte -->
+<g filter="url(#rau3)">
+  <path d="M96 118 L150 104 L212 112 L268 100 L330 108 L392 96 L452 104 L520 96 L580 108
+           L636 128 L672 150 L648 178 L664 206 L640 232 L610 250 L556 268 L500 286
+           L440 300 L380 300 L320 292 L262 288 L206 300 L156 288 L120 250 L104 200 Z"
+        fill="#e9f0f4" stroke="#5f7480" stroke-width="2"/>
+  <!-- Hrod-Halbinsel westlich -->
+  <path d="M96 118 L118 130 L126 176 L140 216 L120 246 L100 214 L92 168 Z" fill="#dfe9ef" stroke="#5f7480" stroke-width="1.6"/>
+  <!-- Viad-Gletscher -->
+  <path d="M386 104 q26 40 22 96 q-3 46 -18 82 q-16 -46 -14 -96 q2 -48 10 -82 z" fill="#d3e2ec" stroke="#7d95a4" stroke-width="1.4"/>
+  <!-- Kliu-Landzunge nach Osten -->
+  <path d="M636 128 L690 140 L706 172 L688 202 L652 224 L616 240 L600 218 L634 190 L648 156 Z"
+        fill="#dfe9ef" stroke="#5f7480" stroke-width="1.6"/>
+</g>
+
+<!-- Winterpackeis -->
+<g filter="url(#rau3)">
+  <path d="M104 214 L120 250 L156 288 L206 300 L262 288 L320 292 L380 300 L440 300
+           L500 286 L556 268 L610 250 L642 230
+           C640 300 560 356 440 366 C330 375 210 344 148 300 C112 274 100 244 104 214 Z"
+        fill="#e4edf2" stroke="#8ba0ad" stroke-width="1.6"/>
+</g>
+<g fill="none" stroke="#f7fbfd" stroke-width="3" opacity=".9">
+  <path d="M132 292 q40 34 106 50 q100 24 200 18 q108 -6 178 -56"/>
+</g>
+<g fill="#f2f8fb" stroke="#8ba0ad" stroke-width="1">
+  <circle cx="152" cy="306" r="7"/><circle cx="176" cy="320" r="8"/><circle cx="204" cy="331" r="7"/>
+  <circle cx="234" cy="341" r="8"/><circle cx="266" cy="349" r="7"/><circle cx="300" cy="356" r="8"/>
+  <circle cx="336" cy="361" r="7"/><circle cx="372" cy="365" r="8"/><circle cx="410" cy="366" r="7"/>
+  <circle cx="446" cy="364" r="8"/><circle cx="482" cy="359" r="7"/><circle cx="516" cy="351" r="8"/>
+  <circle cx="548" cy="341" r="7"/><circle cx="578" cy="328" r="8"/><circle cx="606" cy="311" r="7"/>
+  <circle cx="628" cy="291" r="8"/><circle cx="640" cy="268" r="7"/><circle cx="130" cy="278" r="7"/>
+</g>
+
+<!-- Berge -->
+<g>
+  <use href="#eisberg" x="150" y="120" width="44" height="25"/>
+  <use href="#eisberg" x="196" y="112" width="48" height="28"/>
+  <use href="#eisberg" x="244" y="118" width="44" height="25"/>
+  <use href="#eisberg" x="290" y="128" width="46" height="27"/>
+  <use href="#eisberg" x="336" y="140" width="42" height="24"/>
+  <use href="#eisberg" x="286" y="170" width="46" height="27"/>
+  <use href="#eisberg" x="330" y="182" width="44" height="25"/>
+  <use href="#eisberg" x="248" y="180" width="42" height="24"/>
+  <use href="#eisberg" x="444" y="150" width="46" height="27"/>
+  <use href="#eisberg" x="486" y="140" width="50" height="29"/>
+  <use href="#eisberg" x="534" y="152" width="46" height="27"/>
+  <use href="#eisberg" x="470" y="196" width="48" height="28"/>
+  <use href="#eisberg" x="518" y="206" width="44" height="25"/>
+  <use href="#eisberg" x="562" y="192" width="46" height="27"/>
+  <use href="#eisberg" x="360" y="222" width="46" height="27"/>
+  <use href="#eisberg" x="404" y="234" width="42" height="24"/>
+  <use href="#eisberg" x="606" y="176" width="44" height="25"/>
+  <use href="#eisberg" x="644" y="196" width="42" height="24"/>
+  <use href="#eisberg" x="146" y="244" width="44" height="25"/>
+  <use href="#eisberg" x="186" y="258" width="42" height="24"/>
+  <use href="#eisberg" x="124" y="212" width="42" height="24"/>
+</g>
+
+<!-- Insel Syem, Der Felsen -->
+<g filter="url(#rau3)" fill="#dfe9ef" stroke="#5f7480" stroke-width="1.5">
+  <path d="M300 258 q22 -6 26 10 q2 14 -12 15 q-16 1 -16 -13 z"/>
+  <path d="M376 268 q18 -5 20 10 q1 12 -11 12 q-12 0 -11 -12 z"/>
+</g>
+
+<!-- Siedlungen -->
+<g>
+  <use href="#burg3" x="212" y="262" width="26" height="26"/>
+  <use href="#burg3" x="146" y="566" width="26" height="26"/>
+  <use href="#burg3" x="574" y="586" width="26" height="26"/>
+</g>
+
+<!-- Inseln im Süden -->
+<g filter="url(#rau3)" fill="#c9c096" stroke="#4a4130" stroke-width="1.6">
+  <path d="M138 570 q34 -10 44 10 q6 20 -16 24 q-30 4 -32 -16 z"/>
+  <path d="M300 570 q22 -6 24 10 q1 13 -12 13 q-14 0 -13 -13 z"/>
+  <path d="M222 592 q16 -4 18 12 q1 12 -10 12 q-11 0 -10 -12 z"/>
+  <path d="M272 600 q18 -4 19 12 q1 12 -10 12 q-11 0 -10 -12 z"/>
+  <path d="M566 592 q22 -6 24 10 q1 13 -12 13 q-14 0 -13 -13 z"/>
+</g>
+
+<!-- Beschriftung -->
+<g fill="#22262c" style="paint-order:stroke;stroke:#f0f4f6;stroke-width:3.4;stroke-linejoin:round;stroke-opacity:.85">
+  <text x="404" y="92" font-size="19" letter-spacing="4" text-anchor="middle">IKAYA</text>
+  <text x="404" y="108" font-size="12" text-anchor="middle">Die Eisfestung</text>
+  <text x="700" y="80" font-size="14" text-anchor="middle">Unbekanntes Nichts</text>
+  <text x="548" y="516" font-size="17" text-anchor="middle">Die Eiswüsten von</text>
+  <text x="548" y="548" font-size="34" letter-spacing="6" text-anchor="middle">KULDE</text>
+  <text x="228" y="462" font-size="26" letter-spacing="3" text-anchor="middle" transform="rotate(-14 228 462)">Die Kuldersee</text>
+  <text x="404" y="396" font-size="14" letter-spacing="1" text-anchor="middle" transform="rotate(-9 404 396)">Grenzverlauf des Winterpackeises</text>
+
+  <g font-size="13">
+    <text x="264" y="122" text-anchor="middle">Hrod-Kette</text>
+    <text x="176" y="156">Hrod</text>
+    <text x="120" y="182" text-anchor="middle" transform="rotate(-80 120 182)">Hrod-Eisschelf</text>
+    <text x="336" y="144" text-anchor="middle">Sturmriesen-Pass</text>
+    <text x="330" y="176" text-anchor="middle">Viad-Gebirge</text>
+    <text x="400" y="196" text-anchor="middle" transform="rotate(74 400 196)">Viad-Gletscher</text>
+    <text x="516" y="156" text-anchor="middle">Myjavik-Gebirge</text>
+    <text x="248" y="210" text-anchor="middle">Hrod-Becken</text>
+    <text x="372" y="212" text-anchor="middle" font-size="11">Wolken-</text>
+    <text x="372" y="224" text-anchor="middle" font-size="11">macher-</text>
+    <text x="372" y="236" text-anchor="middle" font-size="11">berg</text>
+    <text x="500" y="222" text-anchor="middle">Kliu-Bergkette</text>
+    <text x="632" y="196" text-anchor="middle" transform="rotate(66 632 196)">Drygga-Eisschelf</text>
+    <text x="152" y="272" text-anchor="middle" transform="rotate(64 152 272)">Ljuk-Bergkette</text>
+    <text x="208" y="282" text-anchor="end">Ljuk</text>
+    <text x="306" y="252" text-anchor="middle" font-size="11">Der</text>
+    <text x="306" y="264" text-anchor="middle" font-size="11">Felsen</text>
+    <text x="386" y="256" text-anchor="middle" font-size="11">Insel</text>
+    <text x="386" y="268" text-anchor="middle" font-size="11">Syem</text>
+    <text x="300" y="318" text-anchor="middle" transform="rotate(-9 300 318)">Ljuk-Eisschelf</text>
+    <text x="530" y="312" text-anchor="middle" transform="rotate(-14 530 312)">Kliu-Eisschelf</text>
+    <text x="412" y="322" text-anchor="middle">Hall-Klippe</text>
+    <text x="228" y="338" text-anchor="middle">Ljuksund</text>
+    <text x="398" y="344">Krie</text>
+    <text x="330" y="348" text-anchor="middle">Tola</text>
+    <text x="140" y="584" text-anchor="end">Anskaven</text>
+    <text x="216" y="600" text-anchor="end">Thet</text>
+    <text x="286" y="618">Egen</text>
+    <text x="312" y="568">Broka</text>
+    <text x="596" y="600">Löf</text>
+  </g>
+</g>
+
+<!-- Kompass -->
+<g transform="translate(786,150)">
+  <circle r="34" fill="#eef2f5" fill-opacity=".6" stroke="#4a5560" stroke-width="1.6"/>
+  <path d="M0 -30 L7 -6 L0 0 L-7 -6 Z M0 30 L7 6 L0 0 L-7 6 Z M-30 0 L-6 -7 L0 0 L-6 7 Z M30 0 L6 -7 L0 0 L6 7 Z" fill="#4a5560"/>
+  <path d="M0 -30 L7 -6 L0 0 Z M30 0 L6 7 L0 0 Z" fill="#7a3a52"/>
+  <text y="-38" font-size="12" text-anchor="middle" fill="#22262c">N</text>
+</g>
+
+<!-- Maßstab -->
+<g transform="translate(760,596)">
+  <text y="-8" font-size="13" fill="#22262c" style="paint-order:stroke;stroke:#f0f4f6;stroke-width:3;stroke-opacity:.85">Skala in Meilen</text>
+  <g stroke="#39434a" stroke-width="1">
+    <rect x="0" y="0" width="24" height="10" fill="#4a5560"/><rect x="24" y="0" width="24" height="10" fill="#f2f6f8"/>
+    <rect x="48" y="0" width="24" height="10" fill="#4a5560"/><rect x="72" y="0" width="24" height="10" fill="#f2f6f8"/>
+    <rect x="96" y="0" width="24" height="10" fill="#4a5560"/><rect x="120" y="0" width="24" height="10" fill="#f2f6f8"/>
+  </g>
+  <g font-size="10" fill="#22262c" text-anchor="middle" style="paint-order:stroke;stroke:#f0f4f6;stroke-width:2.6;stroke-opacity:.8">
+    <text x="0" y="23">0</text><text x="24" y="23">25</text><text x="48" y="23">50</text><text x="72" y="23">75</text>
+    <text x="96" y="23">100</text><text x="120" y="23">125</text><text x="144" y="23">150</text>
+  </g>
+</g>
+</svg>`},
+  4:{titel:"Die Ödlande und das Südliche Sommerlund", svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 708" width="1000" height="708" font-family="Iowan Old Style, Palatino Linotype, Palatino, Georgia, serif">
+<defs>
+  <symbol id="berg" viewBox="0 0 24 14" overflow="visible">
+    <path d="M1 13 L8 2 L12 7 L15 4 L23 13 Z" fill="#8f7d63" stroke="#4b3f2e" stroke-width="1"/>
+    <path d="M8 2 L10.5 6 L8.5 6.5 Z" fill="#e2d7c0"/>
+  </symbol>
+  <symbol id="baum" viewBox="0 0 12 16" overflow="visible">
+    <path d="M6 1 L10 8 L7.5 8 L10.5 14 L1.5 14 L4.5 8 L2 8 Z" fill="#4e6c40" stroke="#2c3f23" stroke-width=".8"/>
+  </symbol>
+  <symbol id="burg" viewBox="0 0 20 20" overflow="visible">
+    <rect x="4" y="7" width="12" height="10" fill="#efe7d2" stroke="#3a3226" stroke-width="1.3"/>
+    <path d="M4 7 v-4 h3 v2 h3 v-2 h3 v2 h3 v2" fill="#efe7d2" stroke="#3a3226" stroke-width="1.3"/>
+    <rect x="8.5" y="11" width="3" height="6" fill="#3a3226"/>
+  </symbol>
+  <symbol id="dorf" viewBox="0 0 16 14" overflow="visible">
+    <path d="M2 12 v-5 l6-4 l6 4 v5 z" fill="#efe7d2" stroke="#3a3226" stroke-width="1.2"/>
+    <path d="M6.5 12 v-4 h3 v4" fill="#3a3226"/>
+  </symbol>
+  <pattern id="wellen4" width="46" height="26" patternUnits="userSpaceOnUse">
+    <path d="M0 8 q11 -6 23 0 q11 6 23 0 M0 20 q11 -6 23 0 q11 6 23 0" fill="none" stroke="#5b7fa0" stroke-width="1.1" opacity=".5"/>
+  </pattern>
+  <filter id="rau4"><feTurbulence type="fractalNoise" baseFrequency="0.021" numOctaves="3" seed="19"/>
+    <feDisplacementMap in="SourceGraphic" scale="6" xChannelSelector="R" yChannelSelector="G"/></filter>
+</defs>
+
+<!-- Land -->
+<rect width="1000" height="708" fill="#8fa06a"/>
+<g filter="url(#rau4)">
+  <!-- Ödlande -->
+  <path d="M300 176 L400 158 L500 164 L580 186 L636 220 L648 268 L600 308 L500 322 L400 314 L322 288 L288 236 Z"
+        fill="#c3a172"/>
+  <!-- Wüste -->
+  <path d="M296 520 L400 494 L520 486 L620 500 L700 540 L706 600 L600 640 L440 646 L330 618 L286 570 Z"
+        fill="#d8c47c"/>
+  <!-- Sumpf -->
+  <path d="M330 372 L400 360 L452 372 L470 396 L430 414 L364 410 L326 396 Z" fill="#7fa0a2" opacity=".9"/>
+  <path d="M486 384 L546 376 L566 396 L534 412 L488 404 Z" fill="#7fa0a2" opacity=".9"/>
+</g>
+
+<!-- Meer -->
+<g filter="url(#rau4)">
+  <path d="M392 0 L412 60 L452 106 L500 132 L548 148 L566 178 L596 206 L628 232 L664 250 L700 256
+           L714 290 L702 330 L678 358 L660 392 L674 422 L702 452 L722 488 L744 522 L754 566 L748 612
+           L1000 612 L1000 0 Z"
+        fill="#7fa3c0" stroke="#33465c" stroke-width="2.2"/>
+</g>
+<path d="M392 0 L412 60 L452 106 L500 132 L548 148 L566 178 L596 206 L628 232 L664 250 L700 256
+         L714 290 L702 330 L678 358 L660 392 L674 422 L702 452 L722 488 L744 522 L754 566 L748 612
+         L1000 612 L1000 0 Z" fill="url(#wellen4)" opacity=".8"/>
+<!-- Inseln -->
+<g filter="url(#rau4)" fill="#8fa06a" stroke="#3a4a2c" stroke-width="1.6">
+  <path d="M812 418 q26 -6 30 12 q2 16 -16 16 q-20 0 -18 -16 z"/>
+  <path d="M856 438 q18 -4 20 12 q1 12 -12 12 q-12 0 -11 -12 z"/>
+  <path d="M726 436 q18 -4 20 12 q1 12 -12 12 q-12 0 -11 -12 z"/>
+</g>
+
+<!-- Berge -->
+<g>
+  <!-- Schroffsteingebirge (NW) -->
+  <use href="#berg" x="150" y="180" width="48" height="28"/>
+  <use href="#berg" x="192" y="200" width="52" height="30"/>
+  <use href="#berg" x="126" y="216" width="46" height="27"/>
+  <use href="#berg" x="176" y="238" width="50" height="29"/>
+  <use href="#berg" x="222" y="256" width="46" height="27"/>
+  <use href="#berg" x="140" y="266" width="44" height="26"/>
+  <use href="#berg" x="188" y="292" width="48" height="28"/>
+  <use href="#berg" x="236" y="304" width="44" height="26"/>
+  <!-- Maakengebirge -->
+  <use href="#berg" x="330" y="340" width="46" height="27"/>
+  <use href="#berg" x="374" y="352" width="50" height="29"/>
+  <use href="#berg" x="420" y="342" width="46" height="27"/>
+  <use href="#berg" x="464" y="356" width="48" height="28"/>
+  <use href="#berg" x="510" y="346" width="46" height="27"/>
+  <use href="#berg" x="352" y="376" width="44" height="26"/>
+  <use href="#berg" x="440" y="384" width="46" height="27"/>
+  <use href="#berg" x="288" y="392" width="48" height="28"/>
+  <use href="#berg" x="252" y="418" width="46" height="27"/>
+  <!-- Quarlen-Gebirge (SW) -->
+  <use href="#berg" x="132" y="464" width="48" height="28"/>
+  <use href="#berg" x="176" y="480" width="46" height="27"/>
+  <use href="#berg" x="120" y="500" width="44" height="26"/>
+  <use href="#berg" x="164" y="516" width="46" height="27"/>
+  <!-- Vakarberge -->
+  <use href="#berg" x="560" y="468" width="48" height="28"/>
+  <use href="#berg" x="604" y="482" width="46" height="27"/>
+  <use href="#berg" x="648" y="470" width="44" height="26"/>
+  <use href="#berg" x="586" y="500" width="42" height="24"/>
+  <!-- Knochenhügel -->
+  <use href="#berg" x="520" y="396" width="38" height="22"/>
+  <use href="#berg" x="550" y="408" width="36" height="21"/>
+</g>
+
+<!-- Wälder -->
+<g>
+  <use href="#baum" x="150" y="330" width="15" height="20"/><use href="#baum" x="172" y="344" width="15" height="20"/>
+  <use href="#baum" x="194" y="332" width="15" height="20"/><use href="#baum" x="160" y="360" width="15" height="20"/>
+  <use href="#baum" x="188" y="368" width="15" height="20"/><use href="#baum" x="214" y="352" width="15" height="20"/>
+  <use href="#baum" x="236" y="366" width="15" height="20"/><use href="#baum" x="206" y="386" width="15" height="20"/>
+  <use href="#baum" x="176" y="398" width="15" height="20"/><use href="#baum" x="234" y="396" width="15" height="20"/>
+  <use href="#baum" x="288" y="330" width="15" height="20"/><use href="#baum" x="312" y="342" width="15" height="20"/>
+  <use href="#baum" x="336" y="326" width="15" height="20"/>
+  <use href="#baum" x="392" y="392" width="15" height="20"/><use href="#baum" x="414" y="404" width="15" height="20"/>
+  <use href="#baum" x="474" y="404" width="15" height="20"/><use href="#baum" x="496" y="414" width="15" height="20"/>
+  <use href="#baum" x="240" y="176" width="15" height="20"/><use href="#baum" x="262" y="188" width="15" height="20"/>
+  <use href="#baum" x="286" y="170" width="15" height="20"/>
+  <use href="#baum" x="330" y="530" width="15" height="20"/><use href="#baum" x="352" y="542" width="15" height="20"/>
+  <use href="#baum" x="308" y="548" width="15" height="20"/>
+</g>
+
+<!-- Flüsse -->
+<g fill="none" stroke="#4e7ea0" stroke-width="2.6" stroke-linecap="round">
+  <path d="M330 190 q40 44 60 96 q22 52 20 106"/>
+  <path d="M470 260 q30 44 44 84 q14 40 10 76"/>
+  <path d="M196 356 q26 60 34 116 q8 40 4 74"/>
+  <path d="M266 486 q60 22 122 34"/>
+  <path d="M600 372 q40 12 66 34"/>
+</g>
+
+<!-- Straßen -->
+<g fill="none" stroke="#5c4a34" stroke-width="2.2" stroke-dasharray="7 5" opacity=".9">
+  <path d="M290 152 q60 30 130 44 q80 16 140 -12"/>
+  <path d="M292 158 q-20 60 -10 122 q10 60 34 110"/>
+  <path d="M318 384 q80 -18 156 -22 q80 -4 148 4"/>
+  <path d="M628 380 q40 24 60 60"/>
+  <path d="M320 396 q-40 60 -60 118"/>
+  <path d="M258 520 q80 -22 168 -20 q84 2 152 -30"/>
+  <path d="M540 466 q46 30 96 42"/>
+  <path d="M700 268 q20 40 24 92 q4 56 8 108 q4 46 4 88"/>
+</g>
+<path d="M436 524 q40 -8 84 -20" fill="none" stroke="#5c4a34" stroke-width="2.4" stroke-dasharray="10 6"/>
+
+<!-- Siedlungen -->
+<g>
+  <use href="#burg" x="266" y="126" width="28" height="28"/>
+  <use href="#burg" x="546" y="160" width="26" height="26"/>
+  <use href="#burg" x="726" y="244" width="26" height="26"/>
+  <use href="#burg" x="612" y="358" width="26" height="26"/>
+  <use href="#burg" x="602" y="388" width="24" height="24"/>
+  <use href="#burg" x="668" y="410" width="24" height="24"/>
+  <use href="#burg" x="722" y="496" width="26" height="26"/>
+  <use href="#burg" x="212" y="376" width="24" height="24"/>
+  <use href="#burg" x="410" y="510" width="24" height="24"/>
+  <use href="#burg" x="504" y="454" width="24" height="24"/>
+  <use href="#dorf" x="308" y="320" width="20" height="18"/>
+  <use href="#dorf" x="456" y="330" width="20" height="18"/>
+  <use href="#dorf" x="178" y="524" width="20" height="18"/>
+  <use href="#dorf" x="248" y="432" width="20" height="18"/>
+  <use href="#dorf" x="762" y="534" width="20" height="18"/>
+  <!-- Oase -->
+  <g transform="translate(468,512)"><path d="M0 10 q6 -14 12 0" fill="none" stroke="#2c3f23" stroke-width="2"/>
+    <path d="M6 10 v-10 M0 2 q6 -6 12 0" fill="none" stroke="#2c3f23" stroke-width="1.6"/></g>
+</g>
+
+<!-- Beschriftung -->
+<g fill="#26221a" style="paint-order:stroke;stroke:#eee7d6;stroke-width:3.2;stroke-linejoin:round;stroke-opacity:.85">
+  <text x="560" y="112" font-size="19" letter-spacing="3" text-anchor="middle" fill="#1d2a38">DER GOLF VON</text>
+  <text x="560" y="134" font-size="19" letter-spacing="3" text-anchor="middle" fill="#1d2a38">DURENOR</text>
+  <text x="860" y="330" font-size="24" letter-spacing="2" text-anchor="middle" fill="#8c2f22">Südliches</text>
+  <text x="860" y="358" font-size="24" letter-spacing="2" text-anchor="middle" fill="#8c2f22">Sommerlund</text>
+  <text x="452" y="278" font-size="24" letter-spacing="2" text-anchor="middle">Die Ödlande</text>
+  <text x="424" y="600" font-size="20" letter-spacing="3" text-anchor="middle">DIE GROSSE WÜSTE</text>
+  <text x="654" y="574" font-size="18" letter-spacing="3" text-anchor="middle">VASSAGONIEN</text>
+  <text x="212" y="256" font-size="14" letter-spacing="1" text-anchor="middle" transform="rotate(24 212 256)">SCHROFFSTEIN-GEBIRGE</text>
+  <text x="404" y="352" font-size="13" letter-spacing="1" text-anchor="middle" transform="rotate(10 404 352)">MAAKENGEBIRGE</text>
+  <text x="146" y="470" font-size="13" letter-spacing="1" text-anchor="middle">QUARLEN-</text>
+  <text x="146" y="484" font-size="13" letter-spacing="1" text-anchor="middle">GEBIRGE</text>
+  <text x="622" y="524" font-size="13" letter-spacing="1" text-anchor="middle">Vakarberge</text>
+  <text x="552" y="418" font-size="11" letter-spacing="1" text-anchor="middle" transform="rotate(64 552 418)">DIE KNOCHEN-HÜGEL</text>
+  <text x="424" y="428" font-size="12" letter-spacing="1" text-anchor="middle" transform="rotate(16 424 428)">MAAKEN-SÜMPFE</text>
+  <text x="510" y="378" font-size="11" text-anchor="middle">DAS</text>
+  <text x="510" y="390" font-size="11" text-anchor="middle">LEICHEN-MOOR</text>
+  <text x="166" y="318" font-size="12" letter-spacing="1" text-anchor="middle">WALD VON</text>
+  <text x="166" y="330" font-size="12" letter-spacing="1" text-anchor="middle">RUANON</text>
+  <text x="288" y="446" font-size="11" letter-spacing="1" text-anchor="middle">RUINEN VON</text>
+  <text x="288" y="458" font-size="11" letter-spacing="1" text-anchor="middle">MAAKEN</text>
+  <text x="140" y="418" font-size="11" letter-spacing="1" text-anchor="middle">SCHICKSALS-</text>
+  <text x="140" y="430" font-size="11" letter-spacing="1" text-anchor="middle">FÄLLE</text>
+  <text x="268" y="412" font-size="11" letter-spacing="1" text-anchor="middle">MAAKEN-</text>
+  <text x="268" y="424" font-size="11" letter-spacing="1" text-anchor="middle">MINEN</text>
+  <text x="256" y="492" font-size="11" text-anchor="middle" transform="rotate(32 256 492)">MAAKENSCHLUCHT</text>
+
+  <g font-size="14">
+    <text x="262" y="140" text-anchor="end">Holmgard</text>
+    <text x="578" y="172">Ragadorn</text>
+    <text x="756" y="258">Ryme</text>
+    <text x="320" y="228">MOYTURA-</text>
+    <text x="320" y="242">PASS</text>
+    <text x="304" y="334" text-anchor="end">Eshnar</text>
+    <text x="452" y="342" text-anchor="end">Temel</text>
+    <text x="640" y="376">Kadan</text>
+    <text x="208" y="404" text-anchor="end">Ruanon</text>
+    <text x="374" y="380" text-anchor="middle">V'Ka</text>
+    <text x="600" y="404" text-anchor="end">Lujar</text>
+    <text x="694" y="424">Kuchek</text>
+    <text x="724" y="452">Samiz</text>
+    <text x="812" y="442" font-size="12">Lakuri-Inseln</text>
+    <text x="404" y="530" text-anchor="end">Casiorn</text>
+    <text x="474" y="536" font-size="12" text-anchor="middle">Oase</text>
+    <text x="500" y="470" text-anchor="end">Vakar</text>
+    <text x="748" y="516" text-anchor="end">Ferufezan</text>
+    <text x="774" y="552">Lohn</text>
+    <text x="174" y="542" text-anchor="end">Quarlen</text>
+  </g>
+  <g font-size="12" font-style="italic" fill="#2f5068">
+    <text x="240" y="462" transform="rotate(70 240 462)">Xane-Fluss</text>
+    <text x="196" y="556" transform="rotate(66 196 556)">Quarl-Fluss</text>
+    <text x="306" y="510" transform="rotate(70 306 510)">Kor-Fluss</text>
+  </g>
+</g>
+
+<!-- Kompass -->
+<g transform="translate(96,112)">
+  <circle r="30" fill="#eee7d6" fill-opacity=".5" stroke="#8c2f22" stroke-width="1.6"/>
+  <path d="M0 -26 L6 -5 L0 0 L-6 -5 Z M0 26 L6 5 L0 0 L-6 5 Z M-26 0 L-5 -6 L0 0 L-5 6 Z M26 0 L5 -6 L0 0 L5 6 Z" fill="#8c2f22"/>
+  <text y="-34" font-size="12" text-anchor="middle" fill="#26221a">N</text>
+</g>
+
+<!-- Legende -->
+<g transform="translate(772,60)" font-size="12" fill="#26221a">
+  <rect x="-12" y="-24" width="216" height="122" fill="#efe7d2" fill-opacity=".9" stroke="#4a4130" stroke-width="1.4"/>
+  <text x="0" y="-6" font-size="14" letter-spacing="1">Legende</text>
+  <g stroke="#4a4130" stroke-width="1">
+    <rect x="0" y="4" width="16" height="12" fill="#8fa06a"/><rect x="0" y="24" width="16" height="12" fill="#c3a172"/>
+    <rect x="0" y="44" width="16" height="12" fill="#d8c47c"/><rect x="0" y="64" width="16" height="12" fill="#7fa0a2"/>
+  </g>
+  <text x="24" y="14">Ebene</text><text x="24" y="34">Ödland</text>
+  <text x="24" y="54">Wüste</text><text x="24" y="74">Sümpfe</text>
+  <use href="#berg" x="112" y="4" width="24" height="14"/><text x="144" y="16">Berge</text>
+  <use href="#baum" x="118" y="24" width="12" height="16"/><text x="144" y="36">Wald</text>
+  <use href="#burg" x="114" y="44" width="18" height="18"/><text x="144" y="58">Stadt</text>
+  <g transform="translate(112,72)">
+    <g stroke="#3a3226" stroke-width="1">
+      <rect x="0" y="0" width="16" height="8" fill="#8c2f22"/><rect x="16" y="0" width="16" height="8" fill="#efe7d2"/>
+      <rect x="32" y="0" width="16" height="8" fill="#8c2f22"/>
+    </g>
+    <g font-size="9" text-anchor="middle"><text x="0" y="19">0</text><text x="16" y="19">25</text><text x="32" y="19">50</text><text x="48" y="19">75</text></g>
+  </g>
+  <text x="0" y="92" font-size="10">Skala in Meilen</text>
+</g>
+</svg>`},
+  5:{titel:"Das Reich Vassagonien", svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 983 780" width="983" height="780" font-family="Iowan Old Style, Palatino Linotype, Palatino, Georgia, serif">
+<defs>
+  <symbol id="berg" viewBox="0 0 24 14" overflow="visible">
+    <path d="M1 13 L8 2 L12 7 L15 4 L23 13 Z" fill="#8a7550" stroke="#4a3b24" stroke-width="1"/>
+    <path d="M8 2 L10.5 6 L8.5 6.5 Z" fill="#e0d3ae"/>
+  </symbol>
+  <symbol id="huegel" viewBox="0 0 22 10" overflow="visible">
+    <path d="M1 9 q5 -8 10 0 q5 -8 10 0 z" fill="#a89065" stroke="#5b4a2c" stroke-width=".9"/>
+  </symbol>
+  <symbol id="stadt5" viewBox="0 0 22 22" overflow="visible">
+    <rect x="4" y="9" width="14" height="10" fill="#efe4c8" stroke="#3a3226" stroke-width="1.3"/>
+    <path d="M4 9 q7 -8 14 0" fill="#c8b48a" stroke="#3a3226" stroke-width="1.3"/>
+    <path d="M11 1 v3" stroke="#3a3226" stroke-width="1.2"/>
+    <rect x="9" y="13" width="4" height="6" fill="#3a3226"/>
+  </symbol>
+  <symbol id="turm5" viewBox="0 0 14 18" overflow="visible">
+    <rect x="4" y="6" width="6" height="11" fill="#efe4c8" stroke="#3a3226" stroke-width="1.2"/>
+    <path d="M4 6 q3 -5 6 0" fill="#c8b48a" stroke="#3a3226" stroke-width="1.2"/>
+  </symbol>
+  <symbol id="oase5" viewBox="0 0 16 16" overflow="visible">
+    <path d="M8 15 v-8" stroke="#3f5c2e" stroke-width="1.6" fill="none"/>
+    <path d="M8 7 q-7 -1 -7 4 M8 7 q7 -1 7 4 M8 7 q-4 -6 -1 -6 M8 7 q4 -6 1 -6" fill="none" stroke="#3f5c2e" stroke-width="1.6"/>
+  </symbol>
+  <pattern id="wellen5" width="46" height="26" patternUnits="userSpaceOnUse">
+    <path d="M0 8 q11 -6 23 0 q11 6 23 0 M0 20 q11 -6 23 0 q11 6 23 0" fill="none" stroke="#4d76a0" stroke-width="1.1" opacity=".5"/>
+  </pattern>
+  <filter id="rau5"><feTurbulence type="fractalNoise" baseFrequency="0.021" numOctaves="3" seed="31"/>
+    <feDisplacementMap in="SourceGraphic" scale="6" xChannelSelector="R" yChannelSelector="G"/></filter>
+</defs>
+
+<!-- Wüstengrund -->
+<rect width="983" height="780" fill="#cbb87c"/>
+<g filter="url(#rau5)">
+  <!-- fruchtbarer Küstensaum -->
+  <path d="M70 74 L200 106 L336 150 L462 204 L566 252 L648 272 L692 316 L716 380 L724 470
+           L702 560 L730 620 L692 664 L650 716 L600 700 L620 610 L646 520 L640 430 L590 356
+           L500 300 L370 236 L230 178 L96 140 Z" fill="#a8a765" opacity=".85"/>
+</g>
+
+<!-- Meer -->
+<g filter="url(#rau5)">
+  <path d="M60 60 L128 82 L200 98 L268 120 L336 142 L400 166 L462 196 L520 226 L566 244
+           L610 240 L648 264 L680 302 L702 360 L728 424 L734 502 L712 566 L742 616
+           L704 656 L664 704 L628 780 L983 780 L983 60 Z"
+        fill="#6f9ac2" stroke="#2c445e" stroke-width="2.2"/>
+</g>
+<path d="M60 60 L128 82 L200 98 L268 120 L336 142 L400 166 L462 196 L520 226 L566 244
+         L610 240 L648 264 L680 302 L702 360 L728 424 L734 502 L712 566 L742 616
+         L704 656 L664 704 L628 780 L983 780 L983 60 Z" fill="url(#wellen5)" opacity=".8"/>
+
+<!-- Inrahimsee -->
+<g filter="url(#rau5)">
+  <path d="M566 300 q40 -14 62 4 q16 16 -4 28 q-32 18 -62 2 q-16 -12 4 -34 z" fill="#bfe0dd" stroke="#4a7a76" stroke-width="1.6"/>
+</g>
+
+<!-- Khordaim-Inseln -->
+<g filter="url(#rau5)" fill="#c2ad76" stroke="#4a3b24" stroke-width="1.5">
+  <path d="M782 656 q22 -6 24 10 q1 13 -13 13 q-14 0 -11 -13 z"/>
+  <path d="M820 678 q18 -4 19 11 q1 11 -11 11 q-11 0 -8 -11 z"/>
+  <path d="M760 692 q16 -4 17 10 q1 11 -10 11 q-10 0 -7 -11 z"/>
+  <path d="M424 190 q18 -5 20 10 q1 12 -12 12 q-12 0 -8 -12 z"/>
+</g>
+
+<!-- Gebirge -->
+<g>
+  <!-- Dahir-Gebirge -->
+  <use href="#berg" x="470" y="352" width="46" height="27"/>
+  <use href="#berg" x="500" y="372" width="50" height="29"/>
+  <use href="#berg" x="536" y="352" width="46" height="27"/>
+  <use href="#berg" x="560" y="384" width="44" height="26"/>
+  <use href="#berg" x="592" y="356" width="48" height="28"/>
+  <!-- Kabargebirge -->
+  <use href="#berg" x="608" y="404" width="46" height="27"/>
+  <use href="#berg" x="640" y="420" width="48" height="28"/>
+  <use href="#berg" x="672" y="400" width="44" height="26"/>
+  <use href="#berg" x="628" y="436" width="42" height="24"/>
+  <!-- Benoi-Hügel -->
+  <use href="#huegel" x="616" y="366" width="42" height="19"/>
+  <use href="#huegel" x="656" y="374" width="44" height="20"/>
+  <use href="#huegel" x="682" y="388" width="40" height="18"/>
+  <!-- Chahgebirge -->
+  <use href="#berg" x="120" y="470" width="48" height="28"/>
+  <use href="#berg" x="162" y="486" width="50" height="29"/>
+  <use href="#berg" x="206" y="502" width="46" height="27"/>
+  <use href="#berg" x="146" y="512" width="44" height="26"/>
+  <use href="#berg" x="248" y="516" width="42" height="24"/>
+  <!-- Koneshigebirge -->
+  <use href="#berg" x="400" y="512" width="46" height="27"/>
+  <use href="#berg" x="444" y="530" width="48" height="28"/>
+  <use href="#berg" x="490" y="548" width="46" height="27"/>
+  <use href="#berg" x="536" y="566" width="48" height="28"/>
+  <use href="#berg" x="582" y="582" width="44" height="26"/>
+  <use href="#berg" x="622" y="596" width="46" height="27"/>
+  <!-- Berg Dhanamet -->
+  <use href="#berg" x="330" y="424" width="52" height="30"/>
+  <use href="#berg" x="252" y="432" width="40" height="23"/>
+  <!-- Küstengebirge Norden -->
+  <use href="#berg" x="404" y="248" width="44" height="26"/>
+  <use href="#berg" x="440" y="264" width="46" height="27"/>
+  <use href="#berg" x="478" y="248" width="42" height="24"/>
+</g>
+
+<!-- Karawanenwege -->
+<g fill="none" stroke="#6b4a2c" stroke-width="2.4" stroke-dasharray="9 6" opacity=".9">
+  <path d="M150 356 q120 -6 240 20 q100 22 158 34"/>
+  <path d="M156 452 q120 22 240 62 q110 36 200 62"/>
+  <path d="M148 588 q100 -30 210 -46 q110 -16 200 -6"/>
+  <path d="M338 434 q40 -50 96 -70"/>
+  <path d="M556 410 q40 40 84 76"/>
+</g>
+<!-- Küstenstraße -->
+<g fill="none" stroke="#5c4326" stroke-width="2.8" opacity=".95">
+  <path d="M172 128 q60 30 130 44 q60 12 108 42 q52 34 90 56 q40 24 72 62"/>
+  <path d="M576 336 q52 40 90 96 q30 44 34 96 q4 56 -12 104"/>
+  <path d="M148 168 q-4 60 8 118 q10 48 6 96"/>
+</g>
+
+<!-- Siedlungen -->
+<g>
+  <use href="#turm5" x="150" y="106" width="16" height="20"/>
+  <use href="#turm5" x="222" y="146" width="16" height="20"/>
+  <use href="#stadt5" x="196" y="196" width="26" height="26"/>
+  <use href="#turm5" x="258" y="234" width="16" height="20"/>
+  <use href="#turm5" x="352" y="228" width="16" height="20"/>
+  <use href="#turm5" x="376" y="290" width="16" height="20"/>
+  <use href="#stadt5" x="462" y="284" width="24" height="24"/>
+  <use href="#stadt5" x="530" y="252" width="24" height="24"/>
+  <use href="#stadt5" x="572" y="236" width="30" height="30"/>
+  <use href="#turm5" x="646" y="286" width="16" height="20"/>
+  <use href="#turm5" x="708" y="424" width="16" height="20"/>
+  <use href="#stadt5" x="668" y="520" width="26" height="26"/>
+  <use href="#turm5" x="708" y="600" width="16" height="20"/>
+  <use href="#stadt5" x="650" y="648" width="26" height="26"/>
+  <use href="#turm5" x="126" y="326" width="16" height="20"/>
+  <use href="#turm5" x="136" y="412" width="16" height="20"/>
+  <use href="#turm5" x="474" y="336" width="16" height="20"/>
+  <use href="#oase5" x="256" y="424" width="18" height="18"/>
+  <use href="#oase5" x="426" y="518" width="18" height="18"/>
+</g>
+
+<!-- Beschriftung -->
+<g fill="#26221a" style="paint-order:stroke;stroke:#f0e8d2;stroke-width:3.2;stroke-linejoin:round;stroke-opacity:.85">
+  <text x="740" y="126" font-size="22" letter-spacing="4" text-anchor="middle" fill="#f0e8d2"
+        style="paint-order:stroke;stroke:#2c445e;stroke-width:3.4;stroke-linejoin:round">DAS REICH</text>
+  <text x="740" y="164" font-size="30" letter-spacing="3" text-anchor="middle" fill="#a83a26"
+        style="paint-order:stroke;stroke:#f0e8d2;stroke-width:3.6;stroke-linejoin:round">Vassagonien</text>
+  <text x="316" y="374" font-size="22" letter-spacing="2" text-anchor="middle">Die Große Wüste</text>
+
+  <g font-size="14">
+    <text x="172" y="118">Kuchek</text>
+    <text x="244" y="160">Samiz</text>
+    <text x="220" y="214">Ferufezan</text>
+    <text x="252" y="266" text-anchor="middle">Lohn</text>
+    <text x="352" y="266" text-anchor="middle">Kara Kala</text>
+    <text x="430" y="202">Lyam</text>
+    <text x="394" y="296" text-anchor="end">Tefa</text>
+    <text x="458" y="312" text-anchor="end">Ikaresh</text>
+    <text x="528" y="270" text-anchor="end">Chiras</text>
+    <text x="608" y="256">Barrakeesh</text>
+    <text x="646" y="294">Chula</text>
+    <text x="716" y="404" text-anchor="middle">Kap</text>
+    <text x="716" y="418" text-anchor="middle">Kabar</text>
+    <text x="700" y="552">Bir Rabalou</text>
+    <text x="728" y="616">Chor</text>
+    <text x="682" y="672">Bisutan</text>
+    <text x="146" y="356" text-anchor="middle">Teph</text>
+    <text x="160" y="426" text-anchor="start">Chahdan</text>
+    <text x="466" y="342" font-size="12" text-anchor="middle">DER KOOS</text>
+    <text x="596" y="322" font-size="11" text-anchor="middle">Inrahimsee</text>
+  </g>
+  <g font-size="13" letter-spacing="1">
+    <text x="516" y="392" text-anchor="middle" transform="rotate(38 516 392)">DAHIR-GEBIRGE</text>
+    <text x="580" y="400" text-anchor="middle">DAHIRPASS</text>
+    <text x="658" y="358" text-anchor="middle">BENOI-HÜGEL</text>
+    <text x="640" y="432" text-anchor="middle" transform="rotate(16 640 432)">KABARGEBIRGE</text>
+    <text x="196" y="512" text-anchor="middle" transform="rotate(26 196 512)">CHAHGEBIRGE</text>
+    <text x="140" y="470" text-anchor="middle">CHAHDANPASS</text>
+    <text x="358" y="446" text-anchor="middle">BERG DHANAMET</text>
+    <text x="186" y="588" text-anchor="middle">OMONAI-</text>
+    <text x="186" y="602" text-anchor="middle">PASS</text>
+    <text x="286" y="618" text-anchor="middle">TAL DER TRÄNEN</text>
+    <text x="536" y="588" text-anchor="middle" transform="rotate(24 536 588)">KONESHIGEBIRGE</text>
+    <text x="820" y="676" font-size="13" text-anchor="middle">Khordaim-Inseln</text>
+    <text x="616" y="678" font-size="12" text-anchor="middle" transform="rotate(-14 616 678)">Khurea-Flüsse</text>
+  </g>
+</g>
+
+<!-- Kompass -->
+<g transform="translate(258,318)">
+  <circle r="30" fill="#efe4c8" fill-opacity=".45" stroke="#a83a26" stroke-width="1.6"/>
+  <path d="M0 -26 L6 -5 L0 0 L-6 -5 Z M0 26 L6 5 L0 0 L-6 5 Z M-26 0 L-5 -6 L0 0 L-5 6 Z M26 0 L5 -6 L0 0 L5 6 Z" fill="#a83a26"/>
+  <text y="-34" font-size="12" text-anchor="middle" fill="#26221a">N</text>
+</g>
+
+<!-- Legende -->
+<g transform="translate(790,300)" font-size="12" fill="#26221a">
+  <rect x="-14" y="-26" width="176" height="192" fill="#efe4c8" fill-opacity=".92" stroke="#4a3b24" stroke-width="1.4"/>
+  <text x="52" y="-8" font-size="14" letter-spacing="1" text-anchor="middle">Legende</text>
+  <g stroke="#4a3b24" stroke-width="1">
+    <rect x="96" y="2" width="22" height="14" fill="#a8a765"/>
+    <rect x="96" y="28" width="22" height="14" fill="#c2ad76"/>
+    <rect x="96" y="106" width="22" height="14" fill="#bfe0dd"/>
+    <rect x="96" y="132" width="22" height="14" fill="#cbb87c"/>
+  </g>
+  <use href="#huegel" x="96" y="30" width="22" height="10"/>
+  <use href="#berg" x="96" y="52" width="24" height="14"/>
+  <use href="#turm5" x="102" y="78" width="12" height="16"/>
+  <use href="#oase5" x="98" y="156" width="18" height="18"/>
+  <text x="0" y="14">Ebene</text><text x="0" y="40">Hügel</text><text x="0" y="66">Berge</text>
+  <text x="0" y="92">Felstürme</text><text x="0" y="118">Salzsee</text><text x="0" y="144">Wüste</text>
+  <text x="0" y="170">Oase</text>
+</g>
+
+<!-- Maßstab -->
+<g transform="translate(120,672)">
+  <text y="-8" font-size="13" fill="#26221a" style="paint-order:stroke;stroke:#f0e8d2;stroke-width:3;stroke-opacity:.85">Skala in Meilen</text>
+  <g stroke="#3a3226" stroke-width="1">
+    <rect x="0" y="0" width="24" height="10" fill="#a83a26"/><rect x="24" y="0" width="24" height="10" fill="#efe4c8"/>
+    <rect x="48" y="0" width="24" height="10" fill="#a83a26"/><rect x="72" y="0" width="24" height="10" fill="#efe4c8"/>
+  </g>
+  <g font-size="10" fill="#26221a" text-anchor="middle" style="paint-order:stroke;stroke:#f0e8d2;stroke-width:2.6;stroke-opacity:.8">
+    <text x="0" y="23">0</text><text x="24" y="23">25</text><text x="48" y="23">50</text><text x="72" y="23">75</text>
+  </g>
+</g>
+</svg>`}
+};
+const KARTE_ZU_BUCH = {1:1, 2:1, 3:3, 4:4, 5:5};
+const KARTE_ERSATZ = {2:"Zu Band 2 gibt es keine eigene Karte. Das Buch spielt zwischen Holmgard und Durenor – hier die Karte zu Band 1."};
 
 function spalte(cq){
   if(cq <= -11) return 0;
@@ -634,13 +1579,14 @@ const STANDARD = {
   rucksack:[], speziell:[], katalog:[], gegnerKatalog:[], archiv:[],
   mahlzeiten:0, gold:0, abschnitt:1, notizen:[], provianttasche:false, zuletzt:"",
   feind:{name:"",ks:0,ap:0,apStart:0}, strahlAktiv:true, immun:false, modifikator:0,
-  runden:[]
+  runden:[],
+  charakter:"wolf", bonusse:{}
 };
 
 let S = JSON.parse(JSON.stringify(STANDARD));
 const SCHLUESSEL = "aktionsblatt:v1";
-const VERSION = "0.7";
-const VERSIONSDATUM = "07.09.2026";
+const VERSION = "0.8";
+const VERSIONSDATUM = "08.09.2026";
 
 /* Speicher: in der Claude-App window.storage, als installierte App der Gerätespeicher */
 const Speicher = {
@@ -684,9 +1630,18 @@ function angleichen(){
   }
   if(!Array.isArray(S.notizen)) S.notizen = [];
   if(!Array.isArray(S.disziplinen)) S.disziplinen = [null,null,null,null,null];
-  while(S.disziplinen.length < 5) S.disziplinen.push(null);
+  while(S.disziplinen.length < disziplinenSoll(S.buchNr)) S.disziplinen.push(null);
   if(S.disziplinen.length > DISZIPLINEN.length) S.disziplinen = S.disziplinen.slice(0, DISZIPLINEN.length);
   S.provianttasche = !!S.provianttasche;
+  if(!S.bonusse || typeof S.bonusse !== "object") S.bonusse = {};
+  if(!S.charakter) S.charakter = "wolf";
+  if(S.charakter !== "wolf" && !bonusListe(S.buchNr).some(b=>b.id === S.charakter)) S.charakter = "wolf";
+}
+
+/* Disziplinenplätze an den Band anpassen – nur auffüllen, nie streichen */
+function disziplinenAngleichen(){
+  const soll = disziplinenSoll(S.buchNr);
+  while(S.disziplinen.length < soll) S.disziplinen.push(null);
 }
 
 async function laden(){
@@ -711,9 +1666,22 @@ function sichern(){
 }
 function status(t){ const e = document.getElementById("speicherStatus"); if(e) e.textContent = t; }
 
+/* ---------------- Aktiver Charakter ---------------- */
+
+function bonusAktiv(){
+  if(S.charakter === "wolf") return null;
+  const def = bonusListe(S.buchNr).find(b=>b.id === S.charakter);
+  if(!def) return null;
+  if(!S.bonusse[def.id]) S.bonusse[def.id] = {ksBasis:0, apMax:0, apJetzt:0, felder:{}};
+  const d = S.bonusse[def.id];
+  if(!d.felder) d.felder = {};
+  return {def:def, d:d};
+}
+function heldName(){ const b = bonusAktiv(); return b ? b.def.name : "Einsamer Wolf"; }
+
 /* ---------------- Berechnungen ---------------- */
 
-function hatDisziplin(id){ return S.disziplinen.includes(id); }
+function hatDisziplin(id){ return S.charakter === "wolf" && S.disziplinen.includes(id); }
 function alleDinge(){ return S.rucksack.concat(S.speziell); }
 function aktiveWaffe(){
   let i = S.aktiveWaffe;
@@ -726,7 +1694,12 @@ function waffenkundeGreift(){
   return w.name.trim().toLowerCase() === S.waffenkundeWaffe.trim().toLowerCase();
 }
 function ksBoniListe(){
-  const b = [], w = aktiveWaffe();
+  const b = [];
+  if(bonusAktiv()){
+    if(Number(S.modifikator)) b.push({t:"Modifikator", v:Number(S.modifikator)});
+    return b;
+  }
+  const w = aktiveWaffe();
   if(!w) b.push({t:"ohne Waffe", v:-4});
   else if(Number(w.bonus)) b.push({t:w.name, v:Number(w.bonus)});
   if(waffenkundeGreift()) b.push({t:"Waffenkunde", v:2});
@@ -735,11 +1708,29 @@ function ksBoniListe(){
   if(Number(S.modifikator)) b.push({t:"Modifikator", v:Number(S.modifikator)});
   return b;
 }
-function ksGesamt(){ return Number(S.ksBasis||0) + ksBoniListe().reduce((s,b)=>s+b.v,0); }
+function ksBasisWert(){ const b = bonusAktiv(); return Number((b ? b.d.ksBasis : S.ksBasis) || 0); }
+function ksGesamt(){ return ksBasisWert() + ksBoniListe().reduce((s,b)=>s+b.v,0); }
 function apMaxGesamt(){
+  const b = bonusAktiv();
+  if(b) return Number(b.d.apMax || 0);
   return Number(S.apMax||0) + alleDinge().reduce((s,g)=> s + (g.effekt === "apmax" ? Number(g.wert||0) : 0), 0);
 }
-function apSetzen(neu){ S.apJetzt = Math.max(0, Math.min(apMaxGesamt(), Math.round(neu))); }
+function apJetztWert(){ const b = bonusAktiv(); return Number((b ? b.d.apJetzt : S.apJetzt) || 0); }
+function apSetzen(neu){
+  const v = Math.max(0, Math.min(apMaxGesamt(), Math.round(neu)));
+  const b = bonusAktiv();
+  if(b) b.d.apJetzt = v; else S.apJetzt = v;
+}
+function grundwertSetzen(feld, wert){
+  const b = bonusAktiv();
+  if(b){
+    b.d[feld === "ks" ? "ksBasis" : "apMax"] = Number(wert||0);
+    /* frisches Bonusblatt: Ausdauer beim Eintragen des Grundwerts auffüllen */
+    if(feld === "ap" && Number(b.d.apJetzt||0) === 0) b.d.apJetzt = Number(wert||0);
+  }
+  else if(feld === "ks") S.ksBasis = Number(wert||0);
+  else S.apMax = Number(wert||0);
+}
 function mahlzeitenBelegen(){ return S.provianttasche ? 0 : Number(S.mahlzeiten||0); }
 function rucksackBelegt(){
   return S.rucksack.reduce((s,g)=>s+(g.anzahl||1),0) + mahlzeitenBelegen();
@@ -747,27 +1738,49 @@ function rucksackBelegt(){
 
 /* ---------------- Darstellung ---------------- */
 
+function zeichneHelden(){
+  const w = document.getElementById("heldenLeiste");
+  const liste = bonusListe(S.buchNr);
+  if(!liste.length){ w.innerHTML = ""; return; }
+  let h = `<button data-held="wolf" aria-pressed="${S.charakter==="wolf"}">Einsamer Wolf</button>`;
+  liste.forEach(b=>{
+    h += `<button class="bonusheld" data-held="${b.id}" aria-pressed="${S.charakter===b.id}">${esc(b.name)}</button>`;
+  });
+  w.innerHTML = h;
+}
+
 function zeichneKopf(){
+  const bon = bonusAktiv();
+  document.getElementById("blattTitel").textContent = bon ? bon.def.titel : "AKTIONSBLATT";
   document.getElementById("ksAnzeige").textContent = ksGesamt();
   const boni = ksBoniListe();
   document.getElementById("ksAufschlag").textContent =
     boni.length ? boni.map(b=>(b.v>0?"+":"")+b.v+" "+b.t).join(" · ") : "keine Boni";
   const max = apMaxGesamt();
-  const apExtra = max - Number(S.apMax||0);
+  const apExtra = bon ? 0 : max - Number(S.apMax||0);
   document.getElementById("apVon").textContent = "von " + max;
   document.getElementById("ksVon").textContent = boni.length ? "mit Boni" : "ohne Boni";
-  const aj = document.getElementById("apJetzt"); if(document.activeElement!==aj) aj.value = S.apJetzt;
+  const aj = document.getElementById("apJetzt"); if(document.activeElement!==aj) aj.value = apJetztWert();
   const h = document.getElementById("apHinweis");
-  h.textContent = S.apJetzt <= 0 ? "Tot – das Abenteuer ist beendet."
-                : (apExtra ? "+" + apExtra + " durch Ausrüstung" : "0 = Tot");
-  h.className = "unter" + (S.apJetzt <= 0 ? " tot" : "");
-  [["ksBasis","ksBasis"],["apMax","apMax"],["ksBasis2","ksBasis"],["apMax2","apMax"]].forEach(([id,feld])=>{
-    const e = document.getElementById(id); if(e && document.activeElement!==e) e.value = S[feld];
+  const leer = bon && !max && !Number(bon.d.ksBasis||0);
+  h.textContent = leer ? "Kampfstärke und Ausdauer eintragen"
+                : (apJetztWert() <= 0 ? "Tot – das Abenteuer ist beendet."
+                : (apExtra ? "+" + apExtra + " durch Ausrüstung" : "0 = Tot"));
+  h.className = "unter" + (!leer && apJetztWert() <= 0 ? " tot" : "");
+  const ksW = ksBasisWert(), apW = bon ? Number(bon.d.apMax||0) : Number(S.apMax||0);
+  [["ksBasis",ksW],["apMax",apW],["ksBasis2",ksW],["apMax2",apW]].forEach(([id,v])=>{
+    const e = document.getElementById(id); if(e && document.activeElement!==e) e.value = v;
   });
   document.getElementById("buchAnzeige").textContent =
     "Buch " + S.buchNr + (BUCHTITEL[S.buchNr] ? " – " + BUCHTITEL[S.buchNr] : "") +
     " · Abschnitt " + S.abschnitt;
   document.getElementById("versionZeile").textContent = "Version " + VERSION;
+  document.getElementById("spalteHeld").textContent = heldName();
+  document.getElementById("kampfHeld").textContent = bon ? "Kampf für " + bon.def.name : "";
+  const eh = document.getElementById("erstellHinweis");
+  if(eh) eh.textContent = bon
+    ? "Die Felder oben gehören gerade zu " + bon.def.name + ". Für den Einsamen Wolf oben umschalten."
+    : "";
 }
 
 function zeichneDisziplinen(){
@@ -775,8 +1788,11 @@ function zeichneDisziplinen(){
   w.innerHTML = "";
   const anzahl = S.disziplinen.length;
   const belegt = S.disziplinen.filter(Boolean).length;
+  const soll = disziplinenSoll(S.buchNr);
   document.getElementById("dizZaehler").textContent = belegt + " von " + anzahl + " gewählt";
   document.getElementById("dizPlus").style.display = anzahl >= DISZIPLINEN.length ? "none" : "inline-block";
+  document.getElementById("dizHinweis").textContent =
+    "Buch " + S.buchNr + ": " + soll + " Disziplinen. Nach jedem abgeschlossenen Band kommt eine dazu.";
   for(let i=0;i<anzahl;i++){
     const z = document.createElement("div"); z.className = "zeile";
     const gewaehlt = S.disziplinen[i];
@@ -787,7 +1803,7 @@ function zeichneDisziplinen(){
       opt += `<option value="${d.id}"${d.id===gewaehlt?" selected":""}>${d.name}</option>`;
     });
     z.innerHTML = `<span class="nr">${i+1}</span><select data-diz="${i}">${opt}</select>` +
-      (i >= 5 ? `<button class="klein leise" data-dizweg="${i}" aria-label="Platz entfernen">×</button>` : "");
+      (i >= soll ? `<button class="klein leise" data-dizweg="${i}" aria-label="Platz entfernen">×</button>` : "");
     w.appendChild(z);
     if(gewaehlt){
       const d = DISZIPLINEN.find(x=>x.id===gewaehlt);
@@ -836,6 +1852,55 @@ function zeichneWaffen(){
     ? "Der Punkt links markiert die Waffe, die im Kampf geführt wird. Nur deren Bonus zählt."
     : "<b>Ohne Waffe: −4 Kampfstärke.</b>";
   w.appendChild(hinw);
+}
+
+/* Bonus-Aktionsblatt aus dem Feldschema */
+function zeichneBonusblatt(){
+  const wolf = document.getElementById("blattWolf");
+  const bBox = document.getElementById("blattBonus");
+  const rWolf = document.getElementById("rucksackWolf");
+  const rBox = document.getElementById("rucksackBonus");
+  const bon = bonusAktiv();
+  wolf.style.display = bon ? "none" : "block";
+  rWolf.style.display = bon ? "none" : "block";
+  if(!bon){ bBox.innerHTML = ""; rBox.innerHTML = ""; return; }
+
+  let h = "";
+  bon.def.felder.forEach(f=>{
+    h += `<section class="box bonusbox"><h2>${esc(f.label.toUpperCase())}</h2><div class="inhalt">`;
+    if(f.typ === "liste"){
+      for(let i=0;i<f.n;i++){
+        const v = (bon.d.felder[f.k] && bon.d.felder[f.k][i]) || "";
+        h += `<div class="zeile"><span class="nr">${i+1}</span>
+              <input type="text" data-bfeld="${f.k}" data-bidx="${i}" value="${esc(v)}"></div>`;
+      }
+    } else if(f.typ === "text"){
+      const v = bon.d.felder[f.k] || "";
+      h += `<input type="text" data-bfeld="${f.k}" value="${esc(v)}">`;
+    } else if(f.typ === "zahl"){
+      const v = Number(bon.d.felder[f.k] || 0);
+      h += `<div class="zeile"><div class="gname"><div class="t">${esc(f.label)}</div></div>
+            <div class="zaehler">
+              <button class="klein" data-bzahl="${f.k}" data-d="-1">−</button>
+              <span class="wert">${v}</span>
+              <button class="klein" data-bzahl="${f.k}" data-d="1">+</button>
+            </div></div>`;
+    }
+    h += `</div></section>`;
+  });
+  h += `<section class="box bonusbox"><h2>NOTIZEN ZU ${esc(bon.def.name.toUpperCase())}</h2>
+        <div class="inhalt"><textarea data-bfeld="notiz" placeholder="Was ${esc(bon.def.name)} betrifft …"
+        >${esc(bon.d.felder.notiz || "")}</textarea></div></section>`;
+  h += `<div class="fuss" style="text-align:left">Dieses Blatt gehört zu Band ${bon.buch || S.buchNr} und
+        wird unabhängig vom Einsamen Wolf geführt. Kampfstärke und Ausdauerpunkte stehen oben im Kopf.</div>`;
+  bBox.innerHTML = h;
+
+  rBox.innerHTML = `<section class="box bonusbox"><h2>RUCKSACK</h2><div class="inhalt">
+    <div class="leer">${esc(bon.def.name)} führt keinen Rucksack nach den Regeln des Einsamen Wolf.
+    Die Ausrüstung steht auf dem Blatt.</div>
+    <div class="knopfreihe" style="justify-content:flex-start">
+      <button class="klein" data-held="wolf">Zum Einsamen Wolf wechseln</button></div>
+    </div></section>`;
 }
 
 function effektText(g){
@@ -959,9 +2024,14 @@ function zeichneEinstellungen(){
   for(let i=aktuelleReihe.von;i<=aktuelleReihe.bis;i++)
     o += `<option value="${i}"${i===S.buchNr?" selected":""}>Buch ${i}${BUCHTITEL[i]?" – "+BUCHTITEL[i]:""}</option>`;
   b.innerHTML = o;
-  document.getElementById("buchHinweis").textContent = BUCHDINGE[S.buchNr]
-    ? "Gegenstandsliste für dieses Buch ist hinterlegt."
-    : "Für dieses Buch trägst du Gegenstände selbst ein.";
+  const teile = [];
+  teile.push(BUCHDINGE[S.buchNr] ? "Gegenstandsliste hinterlegt."
+                                 : "Gegenstände trägst du für diesen Band selbst ein.");
+  teile.push(disziplinenSoll(S.buchNr) + " Kai-Disziplinen.");
+  const bl = bonusListe(S.buchNr);
+  if(bl.length) teile.push("Bonus-Aktionsblatt: " + bl.map(x=>x.name).join(", ") + ".");
+  teile.push(KARTEN[KARTE_ZU_BUCH[S.buchNr]] ? "Karte vorhanden." : "Keine Karte hinterlegt.");
+  document.getElementById("buchHinweis").textContent = teile.join(" ");
 }
 
 function zeichneGegnerWahl(){
@@ -1024,10 +2094,11 @@ function zeichneArchiv(){
     const el = document.createElement("div");
     el.className = "archiv";
     el.dataset.archiv = k.id;
-    const runden = k.runden.map((r,i)=>`${i+1}. Zahl ${r.zz}: EW −${r.ew==="T"?"Tod":r.ew}, Feind −${r.f==="T"?"Tod":r.f}`).join("<br>");
+    const held = k.held || "Einsamer Wolf";
+    const runden = k.runden.map((r,i)=>`${i+1}. Zahl ${r.zz}: ${esc(held)} −${r.ew==="T"?"Tod":r.ew}, Feind −${r.f==="T"?"Tod":r.f}`).join("<br>");
     el.innerHTML =
       `<div class="kopfz"><b>${esc(k.name||"Gegner")}</b><span class="meta">${k.ergebnis}</span></div>
-       <div class="meta">Buch ${k.buch} · Abschnitt ${k.abschnitt} · KS ${k.ks} · AP ${k.apStart} · ${k.runden.length} Runden · ${k.datum}</div>
+       <div class="meta">${esc(held)} · Buch ${k.buch} · Abschnitt ${k.abschnitt} · KS ${k.ks} · AP ${k.apStart} · ${k.runden.length} Runden · ${k.datum}</div>
        <div class="runden">${runden || "keine Runden"}<br>
          <button class="klein leise" data-archivweg="${k.id}" style="margin-top:6px">Eintrag löschen</button></div>`;
     w.appendChild(el);
@@ -1057,7 +2128,7 @@ function zeichneInstall(){
   } else if(location.protocol === "file:"){
     b.innerHTML = "Diese Datei liegt lokal. So bekommst du ein Symbol auf den Startbildschirm: " +
       "Datei in Chrome öffnen, dann Menü (drei Punkte) und „Zum Startbildschirm hinzufügen“. " +
-      "Für eine echte Installation samt Offline-Betrieb legst du alle vier Dateien " +
+      "Für eine echte Installation samt Offline-Betrieb legst du alle Dateien " +
       "(index.html, manifest.webmanifest, sw.js und die beiden Symbole) auf einen Webspeicher " +
       "mit https, etwa GitHub Pages oder Netlify Drop, und rufst die Adresse in Chrome auf.";
   } else if(location.protocol.startsWith("http")){
@@ -1069,15 +2140,163 @@ function zeichneInstall(){
   }
 }
 
+/* ---------------- Karte ---------------- */
+
+const Karte = {
+  nr:0, s:1, x:0, y:0, bw:0, bh:0,
+  zeiger:new Map(), start:null, letzterTipp:0,
+
+  waehle(nr, merken){
+    const feld = document.getElementById("karteFeld");
+    const inh = document.getElementById("karteInhalt");
+    const k = KARTEN[nr];
+    if(!k){
+      inh.innerHTML = "";
+      feld.innerHTML = '<div class="karteleer">Für diesen Band ist keine Karte hinterlegt.</div>';
+      document.getElementById("karteTitel").textContent = "";
+      document.getElementById("karteFuss").textContent = "";
+      this.nr = 0; return;
+    }
+    if(!document.getElementById("karteInhalt")){
+      feld.innerHTML = '<div class="karteinhalt" id="karteInhalt"></div>';
+    }
+    const ziel = document.getElementById("karteInhalt");
+    ziel.innerHTML = k.svg;
+    const svg = ziel.querySelector("svg");
+    this.bw = Number(svg.getAttribute("width")) || 1000;
+    this.bh = Number(svg.getAttribute("height")) || 700;
+    svg.removeAttribute("width"); svg.removeAttribute("height");
+    svg.style.width = this.bw + "px"; svg.style.height = this.bh + "px";
+    this.nr = nr;
+    document.getElementById("karteTitel").textContent = k.titel;
+    const ersatz = KARTE_ERSATZ[S.buchNr];
+    document.getElementById("karteFuss").textContent =
+      (merken && ersatz && KARTE_ZU_BUCH[S.buchNr] === nr) ? ersatz : "";
+    this.einpassen();
+    this.zeichneWahl();
+  },
+
+  /* "ganz" zeigt die vollständige Karte, sonst wird das Feld ausgefüllt –
+     auf dem Hochkant-Handy ist das für eine Querformat-Karte deutlich lesbarer. */
+  einpassen(modus){
+    const feld = document.getElementById("karteFeld");
+    const b = feld.clientWidth, h = feld.clientHeight;
+    if(!this.bw) return;
+    const kleiner = Math.min(b / this.bw, h / this.bh);
+    const groesser = Math.max(b / this.bw, h / this.bh);
+    this.s = modus === "ganz" ? kleiner : Math.min(groesser, kleiner * 2.6, 1.6);
+    this.x = (b - this.bw * this.s) / 2;
+    this.y = (h - this.bh * this.s) / 2;
+    this.anwenden();
+  },
+
+  anwenden(){
+    const inh = document.getElementById("karteInhalt");
+    if(!inh) return;
+    const feld = document.getElementById("karteFeld");
+    const b = feld.clientWidth, h = feld.clientHeight;
+    const bb = this.bw * this.s, hh = this.bh * this.s;
+    this.x = bb <= b ? (b - bb) / 2 : Math.min(0, Math.max(b - bb, this.x));
+    this.y = hh <= h ? (h - hh) / 2 : Math.min(0, Math.max(h - hh, this.y));
+    inh.style.transform = `translate(${this.x}px,${this.y}px) scale(${this.s})`;
+    const z = document.getElementById("karteZoom");
+    if(z) z.textContent = Math.round(this.s * 100) + " %";
+  },
+
+  zoom(faktor, mx, my){
+    const feld = document.getElementById("karteFeld");
+    const r = feld.getBoundingClientRect();
+    const px = (mx === undefined ? r.width / 2 : mx - r.left);
+    const py = (my === undefined ? r.height / 2 : my - r.top);
+    const min = Math.min(r.width / this.bw, r.height / this.bh) * 0.9;
+    const neu = Math.max(min, Math.min(6, this.s * faktor));
+    const v = neu / this.s;
+    this.x = px - (px - this.x) * v;
+    this.y = py - (py - this.y) * v;
+    this.s = neu;
+    this.anwenden();
+  },
+
+  zeichneWahl(){
+    const w = document.getElementById("karteWahl");
+    if(!w) return;
+    w.innerHTML = Object.keys(KARTEN).map(n=>
+      `<button class="klein${Number(n)===this.nr?" stark":""}" data-karte="${n}">${esc(KARTEN[n].titel)}</button>`).join("");
+  },
+
+  binde(){
+    const feld = document.getElementById("karteFeld");
+    feld.addEventListener("pointerdown", ev=>{
+      feld.setPointerCapture(ev.pointerId);
+      this.zeiger.set(ev.pointerId, {x:ev.clientX, y:ev.clientY});
+      feld.classList.add("zieht");
+      if(this.zeiger.size === 2){
+        const p = [...this.zeiger.values()];
+        this.start = {d:Math.hypot(p[0].x-p[1].x, p[0].y-p[1].y), s:this.s,
+                      mx:(p[0].x+p[1].x)/2, my:(p[0].y+p[1].y)/2, x:this.x, y:this.y};
+      }
+    });
+    feld.addEventListener("pointermove", ev=>{
+      const alt = this.zeiger.get(ev.pointerId);
+      if(!alt) return;
+      if(this.zeiger.size === 1){
+        this.x += ev.clientX - alt.x;
+        this.y += ev.clientY - alt.y;
+        this.anwenden();
+      }
+      this.zeiger.set(ev.pointerId, {x:ev.clientX, y:ev.clientY});
+      if(this.zeiger.size === 2 && this.start){
+        const p = [...this.zeiger.values()];
+        const d = Math.hypot(p[0].x-p[1].x, p[0].y-p[1].y);
+        if(this.start.d > 0){
+          const s0 = this.s;
+          this.s = this.start.s;
+          this.x = this.start.x; this.y = this.start.y;
+          this.zoom(d / this.start.d, this.start.mx, this.start.my);
+          if(!isFinite(this.s)) this.s = s0;
+        }
+      }
+      ev.preventDefault();
+    });
+    const los = ev=>{
+      this.zeiger.delete(ev.pointerId);
+      if(this.zeiger.size < 2) this.start = null;
+      if(!this.zeiger.size) feld.classList.remove("zieht");
+    };
+    feld.addEventListener("pointerup", los);
+    feld.addEventListener("pointercancel", los);
+    feld.addEventListener("wheel", ev=>{
+      ev.preventDefault();
+      this.zoom(ev.deltaY < 0 ? 1.15 : 1/1.15, ev.clientX, ev.clientY);
+    }, {passive:false});
+    feld.addEventListener("click", ev=>{
+      const jetzt = Date.now();
+      if(jetzt - this.letzterTipp < 300){
+        this.zoom(this.s > 2.5 ? 0.35 : 1.9, ev.clientX, ev.clientY);
+        this.letzterTipp = 0;
+      } else this.letzterTipp = jetzt;
+    });
+    window.addEventListener("resize", ()=>{ if(this.nr) this.anwenden(); });
+  }
+};
+
+function zeichneKarte(){
+  const nr = KARTE_ZU_BUCH[S.buchNr] || 0;
+  if(nr !== Karte.nr) Karte.waehle(nr, true);
+  else Karte.zeichneWahl();
+}
+
 function zeichne(){
+  disziplinenAngleichen();
   zeichneUeber(); zeichneInstall();
-  zeichneKopf(); zeichneDisziplinen(); zeichneWaffen(); zeichneRucksack();
+  zeichneHelden(); zeichneKopf(); zeichneBonusblatt();
+  zeichneDisziplinen(); zeichneWaffen(); zeichneRucksack();
   zeichneRest(); zeichneEinstellungen(); zeichneKampf();
 }
 
 /* ---------------- Aktionen ---------------- */
 
-function apAendern(delta){ apSetzen(S.apJetzt + delta); zeichneKopf(); sichern(); }
+function apAendern(delta){ apSetzen(apJetztWert() + delta); zeichneKopf(); sichern(); }
 
 function gegnerMerken(){
   if(!S.feind.name) return;
@@ -1092,7 +2311,7 @@ function kampfArchivieren(ergebnis){
   if(!S.runden.length) return;
   S.archiv.push({
     id: Date.now() + "-" + Math.floor(Math.random()*1000),
-    buch:S.buchNr, abschnitt:S.abschnitt, name:S.feind.name || "Gegner",
+    buch:S.buchNr, abschnitt:S.abschnitt, name:S.feind.name || "Gegner", held:heldName(),
     ks:Number(S.feind.ks||0), apStart:Number(S.feind.apStart||0),
     runden:S.runden.slice(), ergebnis:ergebnis,
     datum:new Date().toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"2-digit"})
@@ -1106,6 +2325,11 @@ function kampfrunde(flucht, zahl){
     document.getElementById("kampfErgebnis").textContent = "Erst Kampfstärke und Ausdauer des Gegners eintragen.";
     return;
   }
+  if(apMaxGesamt() <= 0){
+    document.getElementById("kampfErgebnis").textContent =
+      "Für " + heldName() + " sind oben noch keine Ausdauerpunkte eingetragen.";
+    return;
+  }
   if(!S.runden.length){ S.feind.apStart = Number(S.feind.ap||0); gegnerMerken(); }
 
   const zz = (zahl === undefined) ? zieheZufallszahl() : Number(zahl);
@@ -1114,19 +2338,20 @@ function kampfrunde(flucht, zahl){
   let vFeind = paar[0], vEW = paar[1];
   if(flucht) vFeind = 0;
 
-  if(vEW === "T") S.apJetzt = 0; else apSetzen(S.apJetzt - vEW);
+  if(vEW === "T") apSetzen(0); else apSetzen(apJetztWert() - vEW);
   if(vFeind === "T") S.feind.ap = 0; else S.feind.ap = Math.max(0, Number(S.feind.ap||0) - vFeind);
 
   S.runden.push({zz:zz, ew:vEW, f:flucht ? 0 : vFeind});
 
+  const name = heldName();
   let text = `<span class="zz">${zz}</span> Kampfquotient ${cq>0?"+":""}${cq}. `;
-  text += vEW === "T" ? '<span class="tot">Einsamer Wolf: Tod.</span> ' : `Einsamer Wolf −${vEW} AP. `;
+  text += vEW === "T" ? `<span class="tot">${esc(name)}: Tod.</span> ` : `${esc(name)} −${vEW} AP. `;
   if(flucht) text += "Flucht: der Gegner erleidet keinen Verlust.";
   else text += vFeind === "T" ? '<span class="tot">Gegner: Tod.</span>' : `Gegner −${vFeind} AP.`;
 
-  if(S.apJetzt <= 0){
+  if(apJetztWert() <= 0){
     text += ' <span class="tot">Das Abenteuer ist beendet.</span>';
-    kampfArchivieren("Einsamer Wolf gefallen"); S.runden = [];
+    kampfArchivieren(name + " gefallen"); S.runden = [];
   } else if(!flucht && S.feind.ap <= 0){
     text += " Der Gegner ist besiegt.";
     kampfArchivieren("gewonnen"); S.runden = [];
@@ -1142,7 +2367,7 @@ function kampfrunde(flucht, zahl){
 function gegenstandBenutzen(liste,i){
   const arr = liste === "rucksack" ? S.rucksack : S.speziell;
   const g = arr[i]; if(!g) return;
-  if(g.effekt === "ap") apSetzen(S.apJetzt + Number(g.wert||0));
+  if(g.effekt === "ap") apSetzen(apJetztWert() + Number(g.wert||0));
   g.anzahl = (g.anzahl||1) - 1;
   if(g.anzahl <= 0) arr.splice(i,1);
   zeichne(); sichern();
@@ -1178,6 +2403,13 @@ function formularFuellen(name, liste, effekt, wert){
   document.getElementById("neuWert").value = wert || 0;
 }
 
+function tabZeigen(name){
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===name));
+  document.querySelectorAll(".tabseite").forEach(p=>p.classList.toggle("aktiv", p.id==="tab-"+name));
+  window.scrollTo(0,0);
+  if(name === "karte"){ zeichneKarte(); requestAnimationFrame(()=>Karte.einpassen()); }
+}
+
 /* ---------------- Ereignisse ---------------- */
 
 document.addEventListener("click", ev=>{
@@ -1188,19 +2420,31 @@ document.addEventListener("click", ev=>{
     return;
   }
 
-  if(t.dataset.tab){
-    document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected", b===t));
-    document.querySelectorAll(".tabseite").forEach(p=>p.classList.toggle("aktiv", p.id==="tab-"+t.dataset.tab));
-    window.scrollTo(0,0);
-    return;
+  if(t.dataset.tab){ tabZeigen(t.dataset.tab); return; }
+
+  if(t.dataset.held){
+    S.charakter = t.dataset.held;
+    S.runden = []; S.modifikator = 0;
+    zeichne(); tabZeigen("blatt"); sichern(); return;
   }
+  if(t.dataset.karte){ Karte.waehle(Number(t.dataset.karte), false); return; }
+  if(t.dataset.zoom){ Karte.zoom(Number(t.dataset.zoom) > 0 ? 1.35 : 1/1.35); return; }
+  if(t.id === "karteEinpassen"){ Karte.einpassen("ganz"); return; }
+
   if(t.dataset.ap){ apAendern(Number(t.dataset.ap)); return; }
-  if(t.id === "apVoll" || t.id === "apVoll2"){ S.apJetzt = apMaxGesamt(); zeichneKopf(); sichern(); return; }
+  if(t.id === "apVoll" || t.id === "apVoll2"){ apSetzen(apMaxGesamt()); zeichneKopf(); sichern(); return; }
+
+  if(t.dataset.bzahl){
+    const bon = bonusAktiv(); if(!bon) return;
+    const k = t.dataset.bzahl;
+    bon.d.felder[k] = Math.max(0, Number(bon.d.felder[k]||0) + Number(t.dataset.d));
+    zeichneBonusblatt(); sichern(); return;
+  }
 
   if(t.dataset.abschnitt){
     const d = Number(t.dataset.abschnitt);
     S.abschnitt = Math.max(1, S.abschnitt + d);
-    if(d > 0 && hatDisziplin("heilung")) apSetzen(S.apJetzt + 1);
+    if(d > 0 && hatDisziplin("heilung")) apSetzen(apJetztWert() + 1);
     zeichneKopf(); zeichneRest(); zeichneKampf(); zeichneUeber(); sichern(); return;
   }
   if(t.dataset.mahl){
@@ -1332,7 +2576,7 @@ document.addEventListener("click", ev=>{
     if(confirm("Alles zurücksetzen? Kataloge und frühere Kämpfe bleiben erhalten.")){
       const merken = {katalog:S.katalog, gegnerKatalog:S.gegnerKatalog, archiv:S.archiv, buchNr:S.buchNr};
       S = Object.assign(JSON.parse(JSON.stringify(STANDARD)), merken);
-      zeichne(); sichern();
+      angleichen(); zeichne(); sichern();
     }
     return;
   }
@@ -1375,9 +2619,14 @@ document.addEventListener("change", ev=>{
   }
   if(e.id === "reiheWahl"){
     const r = REIHEN.find(x=>x.id === e.value);
-    S.buchNr = r.von; zeichne(); sichern(); return;
+    S.buchNr = r.von; S.charakter = "wolf";
+    disziplinenAngleichen(); zeichne(); zeichneKarte(); sichern(); return;
   }
-  if(e.id === "buchNrWahl"){ S.buchNr = Number(e.value); zeichne(); sichern(); return; }
+  if(e.id === "buchNrWahl"){
+    S.buchNr = Number(e.value);
+    if(!bonusListe(S.buchNr).some(b=>b.id === S.charakter)) S.charakter = "wolf";
+    disziplinenAngleichen(); zeichne(); zeichneKarte(); sichern(); return;
+  }
 });
 
 document.addEventListener("input", ev=>{
@@ -1386,12 +2635,21 @@ document.addEventListener("input", ev=>{
     S.waffen[Number(e.dataset.waffebonus)].bonus = Number(e.value||0);
     zeichneKopf(); aktualisiereCQ(); sichern(); return;
   }
+  if(e.dataset && e.dataset.bfeld !== undefined){
+    const bon = bonusAktiv(); if(!bon) return;
+    const k = e.dataset.bfeld;
+    if(e.dataset.bidx !== undefined){
+      if(!Array.isArray(bon.d.felder[k])) bon.d.felder[k] = [];
+      bon.d.felder[k][Number(e.dataset.bidx)] = e.value;
+    } else bon.d.felder[k] = e.value;
+    sichern(); return;
+  }
   switch(e.id){
     case "ksBasis": case "ksBasis2":
-      S.ksBasis = Number(e.value||0); zeichneKopf(); aktualisiereCQ(); sichern(); break;
+      grundwertSetzen("ks", e.value); zeichneKopf(); aktualisiereCQ(); sichern(); break;
     case "apMax": case "apMax2":
-      S.apMax = Number(e.value||0); apSetzen(S.apJetzt); zeichneKopf(); sichern(); break;
-    case "apJetzt": S.apJetzt = Math.max(0, Math.min(apMaxGesamt(), Number(e.value||0))); zeichneKopf(); sichern(); break;
+      grundwertSetzen("ap", e.value); apSetzen(apJetztWert()); zeichneKopf(); sichern(); break;
+    case "apJetzt": apSetzen(Number(e.value||0)); zeichneKopf(); sichern(); break;
     case "abschnittFeld": S.abschnitt = Math.max(1, Number(e.value||1)); zeichneKopf(); sichern(); break;
     case "feindName": S.feind.name = e.value; sichern(); break;
     case "feindKS": S.feind.ks = Number(e.value||0); aktualisiereCQ(); sichern(); break;
@@ -1429,7 +2687,7 @@ if("serviceWorker" in navigator && location.protocol.startsWith("http")){
   window.addEventListener("load", ()=> navigator.serviceWorker.register("./sw.js").catch(()=>{}));
 }
 
-(async function start(){ await laden(); zeichne(); })();
+(async function start(){ await laden(); Karte.binde(); zeichne(); })();
 </script>
 </body>
 </html>
