@@ -119,6 +119,11 @@ table.kampf td.z{text-align:right;font-variant-numeric:tabular-nums}
 .protokoll{max-height:230px;overflow:auto}
 textarea{border:1px solid var(--linie);min-height:70px;background:var(--papier)}
 .warn{color:var(--rot);font-size:13px}
+.notiz{display:flex;gap:6px;align-items:flex-start;padding:8px 0;border-bottom:1px dotted var(--linie)}
+.notiz:last-child{border-bottom:0}
+.notiz .txt{flex:1;min-width:0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px}
+.notiz .werkzeug{display:flex;gap:4px;flex:none}
+.notiz .werkzeug button{padding:2px 7px;font-size:14px;line-height:1.2}
 .archiv{border-bottom:1px dotted var(--linie);padding:8px 0}
 .archiv:last-child{border-bottom:0}
 .archiv .kopfz{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
@@ -171,8 +176,14 @@ textarea{border:1px solid var(--linie);min-height:70px;background:var(--papier)}
 
 <div class="tabseite aktiv" id="tab-blatt">
   <section class="box">
-    <h2>KAI-DISZIPLINEN <span class="hinweis">5 Fertigkeiten</span></h2>
-    <div class="inhalt" id="dizListe"></div>
+    <h2>KAI-DISZIPLINEN <span class="hinweis" id="dizZaehler">5 Fertigkeiten</span></h2>
+    <div class="inhalt">
+      <div id="dizListe"></div>
+      <div class="knopfreihe" style="justify-content:flex-start">
+        <button class="klein" id="dizPlus">+ Disziplin</button>
+      </div>
+      <div class="eff" style="padding-left:0">Nach jedem abgeschlossenen Buch kommt eine Disziplin dazu.</div>
+    </div>
   </section>
 
   <section class="box">
@@ -195,7 +206,7 @@ textarea{border:1px solid var(--linie);min-height:70px;background:var(--papier)}
       </div>
       <div class="zeile">
         <div class="gname"><div class="t">Mahlzeiten</div>
-          <div class="s">Ohne Mahlzeit −3 AP (entfällt mit Jagd)</div></div>
+          <div class="s" id="mahlHinweis">Ohne Mahlzeit −3 AP (entfällt mit Jagd)</div></div>
         <div class="zaehler">
           <button class="klein" data-mahl="-1">−</button>
           <span class="wert" id="mahlWert">0</span>
@@ -206,6 +217,8 @@ textarea{border:1px solid var(--linie);min-height:70px;background:var(--papier)}
         <button class="klein" id="essen">Mahlzeit essen</button>
         <button class="klein" id="nichtEssen">Nicht essen</button>
       </div>
+      <label class="schalter"><input type="checkbox" id="cbTasche">
+        Provianttasche – Mahlzeiten belegen keinen Rucksackplatz</label>
       <div class="zeile" style="margin-top:8px">
         <div class="gname"><div class="t">Geldbörse</div><div class="s">maximal 50 Goldkronen</div></div>
         <div class="zaehler">
@@ -219,8 +232,14 @@ textarea{border:1px solid var(--linie);min-height:70px;background:var(--papier)}
   </section>
 
   <section class="box">
-    <h2>NOTIZEN</h2>
-    <div class="inhalt"><textarea id="notizen" placeholder="Hinweise, Personen, Orte …"></textarea></div>
+    <h2>NOTIZEN <span class="hinweis" id="notizZaehler"></span></h2>
+    <div class="inhalt">
+      <textarea id="notizNeu" placeholder="Hinweis, Person, Ort, Losung …"></textarea>
+      <div class="knopfreihe" style="justify-content:flex-start">
+        <button class="stark" id="notizSpeichern">Notiz speichern</button>
+      </div>
+      <div id="notizListe" style="margin-top:8px"></div>
+    </div>
   </section>
 </div>
 
@@ -600,14 +619,14 @@ const STANDARD = {
   waffen:[{name:"",bonus:0},{name:"",bonus:0}],
   aktiveWaffe:0,
   rucksack:[], speziell:[], katalog:[], gegnerKatalog:[], archiv:[],
-  mahlzeiten:0, gold:0, abschnitt:1, notizen:"", zuletzt:"",
+  mahlzeiten:0, gold:0, abschnitt:1, notizen:[], provianttasche:false, zuletzt:"",
   feind:{name:"",ks:0,ap:0,apStart:0}, strahlAktiv:true, immun:false, modifikator:0,
   runden:[]
 };
 
 let S = JSON.parse(JSON.stringify(STANDARD));
 const SCHLUESSEL = "aktionsblatt:v1";
-const VERSION = "0.5";
+const VERSION = "0.6";
 const VERSIONSDATUM = "07.09.2026";
 
 /* Speicher: in der Claude-App window.storage, als installierte App der Gerätespeicher */
@@ -646,6 +665,15 @@ function angleichen(){
   if(!Array.isArray(S.gegnerKatalog)) S.gegnerKatalog = [];
   if(!Array.isArray(S.archiv)) S.archiv = [];
   if(S.feind && S.feind.apStart === undefined) S.feind.apStart = S.feind.ap || 0;
+  if(typeof S.notizen === "string"){
+    const t = S.notizen.trim();
+    S.notizen = t ? [{id:"alt-1", text:t}] : [];
+  }
+  if(!Array.isArray(S.notizen)) S.notizen = [];
+  if(!Array.isArray(S.disziplinen)) S.disziplinen = [null,null,null,null,null];
+  while(S.disziplinen.length < 5) S.disziplinen.push(null);
+  if(S.disziplinen.length > DISZIPLINEN.length) S.disziplinen = S.disziplinen.slice(0, DISZIPLINEN.length);
+  S.provianttasche = !!S.provianttasche;
 }
 
 async function laden(){
@@ -699,6 +727,10 @@ function apMaxGesamt(){
   return Number(S.apMax||0) + alleDinge().reduce((s,g)=> s + (g.effekt === "apmax" ? Number(g.wert||0) : 0), 0);
 }
 function apSetzen(neu){ S.apJetzt = Math.max(0, Math.min(apMaxGesamt(), Math.round(neu))); }
+function mahlzeitenBelegen(){ return S.provianttasche ? 0 : Number(S.mahlzeiten||0); }
+function rucksackBelegt(){
+  return S.rucksack.reduce((s,g)=>s+(g.anzahl||1),0) + mahlzeitenBelegen();
+}
 
 /* ---------------- Darstellung ---------------- */
 
@@ -728,7 +760,11 @@ function zeichneKopf(){
 function zeichneDisziplinen(){
   const w = document.getElementById("dizListe");
   w.innerHTML = "";
-  for(let i=0;i<5;i++){
+  const anzahl = S.disziplinen.length;
+  const belegt = S.disziplinen.filter(Boolean).length;
+  document.getElementById("dizZaehler").textContent = belegt + " von " + anzahl + " gewählt";
+  document.getElementById("dizPlus").style.display = anzahl >= DISZIPLINEN.length ? "none" : "inline-block";
+  for(let i=0;i<anzahl;i++){
     const z = document.createElement("div"); z.className = "zeile";
     const gewaehlt = S.disziplinen[i];
     const genutzt = S.disziplinen.filter((d,j)=>d && j!==i);
@@ -737,7 +773,8 @@ function zeichneDisziplinen(){
       if(genutzt.includes(d.id) && d.id !== gewaehlt) return;
       opt += `<option value="${d.id}"${d.id===gewaehlt?" selected":""}>${d.name}</option>`;
     });
-    z.innerHTML = `<span class="nr">${i+1}</span><select data-diz="${i}">${opt}</select>`;
+    z.innerHTML = `<span class="nr">${i+1}</span><select data-diz="${i}">${opt}</select>` +
+      (i >= 5 ? `<button class="klein leise" data-dizweg="${i}" aria-label="Platz entfernen">×</button>` : "");
     w.appendChild(z);
     if(gewaehlt){
       const d = DISZIPLINEN.find(x=>x.id===gewaehlt);
@@ -820,11 +857,18 @@ function gegenstandZeile(g,i,liste){
 
 function zeichneRucksack(){
   const w = document.getElementById("rucksackListe");
-  const anzahl = S.rucksack.reduce((s,g)=>s+(g.anzahl||1),0);
-  document.getElementById("rucksackZaehler").textContent = anzahl + " von 8";
+  document.getElementById("rucksackZaehler").textContent = rucksackBelegt() + " von 8";
   w.innerHTML = "";
   if(!S.rucksack.length) w.innerHTML = '<div class="leer">Der Rucksack ist leer.</div>';
   S.rucksack.forEach((g,i)=> w.appendChild(gegenstandZeile(g,i,"rucksack")));
+  if(S.mahlzeiten > 0){
+    const m = document.createElement("div");
+    m.className = "gegenstand";
+    m.innerHTML = `<div class="gname"><div class="t">Mahlzeiten</div><div class="s">${S.mahlzeiten}× · ` +
+      (S.provianttasche ? "in der Provianttasche, kein Rucksackplatz" : "belegen " + S.mahlzeiten +
+       (S.mahlzeiten === 1 ? " Platz" : " Plätze")) + `</div></div>`;
+    w.appendChild(m);
+  }
 
   const sp = document.getElementById("speziellListe");
   sp.innerHTML = "";
@@ -864,7 +908,32 @@ function zeichneRest(){
   document.getElementById("heilHinweis").textContent =
     hatDisziplin("heilung") ? "Heilung: +1 AP je Abschnitt ohne Kampf"
                             : "Hier stehen bleiben, wo du aufhörst";
-  const n = document.getElementById("notizen"); if(document.activeElement!==n) n.value = S.notizen;
+  const mh = document.getElementById("mahlHinweis");
+  mh.textContent = "Ohne Mahlzeit −3 AP (entfällt mit Jagd) · " +
+    (S.provianttasche ? "Provianttasche: kein Rucksackplatz"
+                      : "belegen " + mahlzeitenBelegen() + " von 8 Plätzen");
+  const ct = document.getElementById("cbTasche");
+  if(document.activeElement !== ct) ct.checked = S.provianttasche;
+  zeichneNotizen();
+}
+
+function zeichneNotizen(){
+  const w = document.getElementById("notizListe");
+  document.getElementById("notizZaehler").textContent =
+    S.notizen.length ? S.notizen.length + (S.notizen.length === 1 ? " Eintrag" : " Einträge") : "";
+  if(!S.notizen.length){ w.innerHTML = '<div class="leer">Noch keine Notiz gespeichert.</div>'; return; }
+  w.innerHTML = "";
+  S.notizen.forEach((n,i)=>{
+    const el = document.createElement("div");
+    el.className = "notiz";
+    el.innerHTML = `<div class="txt">${esc(n.text)}</div>
+      <div class="werkzeug">
+        <button class="klein leise" data-notizhoch="${i}" ${i===0?"disabled":""} aria-label="nach oben">↑</button>
+        <button class="klein leise" data-notizrunter="${i}" ${i===S.notizen.length-1?"disabled":""} aria-label="nach unten">↓</button>
+        <button class="klein leise" data-notizweg="${i}" aria-label="löschen">×</button>
+      </div>`;
+    w.appendChild(el);
+  });
 }
 
 function zeichneEinstellungen(){
@@ -1076,8 +1145,11 @@ function hinzufuegen(g){
   warn.textContent = "";
   if(!g.name){ warn.textContent = "Bitte einen Namen eintragen."; return; }
   if(g.liste === "rucksack"){
-    const belegt = S.rucksack.reduce((s,x)=>s+(x.anzahl||1),0);
-    if(belegt + (g.anzahl||1) > 8){ warn.textContent = "Der Rucksack fasst nur 8 Gegenstände. Erst etwas ablegen."; return; }
+    if(rucksackBelegt() + (g.anzahl||1) > 8){
+      warn.textContent = "Der Rucksack fasst nur 8 Gegenstände" +
+        (mahlzeitenBelegen() ? " – Mahlzeiten zählen mit." : ". Erst etwas ablegen.");
+      return;
+    }
     const vorhanden = S.rucksack.find(x=>x.name.toLowerCase()===g.name.toLowerCase() && x.effekt===g.effekt);
     if(vorhanden) vorhanden.anzahl = (vorhanden.anzahl||1) + (g.anzahl||1);
     else S.rucksack.push(g);
@@ -1118,13 +1190,21 @@ document.addEventListener("click", ev=>{
     if(d > 0 && hatDisziplin("heilung")) apSetzen(S.apJetzt + 1);
     zeichneKopf(); zeichneRest(); zeichneKampf(); zeichneUeber(); sichern(); return;
   }
-  if(t.dataset.mahl){ S.mahlzeiten = Math.max(0, S.mahlzeiten + Number(t.dataset.mahl)); zeichneRest(); sichern(); return; }
+  if(t.dataset.mahl){
+    const d = Number(t.dataset.mahl);
+    if(d > 0 && !S.provianttasche && rucksackBelegt() + d > 8){
+      status("Kein Platz im Rucksack – Mahlzeiten zählen als Gegenstände.");
+      return;
+    }
+    S.mahlzeiten = Math.max(0, S.mahlzeiten + d);
+    zeichneRest(); zeichneRucksack(); sichern(); return;
+  }
   if(t.dataset.gold){ S.gold = Math.max(0, Math.min(50, S.gold + Number(t.dataset.gold))); zeichneRest(); sichern(); return; }
 
   if(t.id === "essen"){
     if(S.mahlzeiten > 0){ S.mahlzeiten--; status("Mahlzeit eingenommen."); }
     else status("Keine Mahlzeit vorrätig.");
-    zeichneRest(); sichern(); return;
+    zeichneRest(); zeichneRucksack(); sichern(); return;
   }
   if(t.id === "nichtEssen"){
     if(hatDisziplin("jagd")) status("Jagd: keine Mahlzeit nötig.");
@@ -1132,6 +1212,36 @@ document.addEventListener("click", ev=>{
     return;
   }
 
+  if(t.id === "dizPlus"){
+    if(S.disziplinen.length < DISZIPLINEN.length){ S.disziplinen.push(null); zeichneDisziplinen(); sichern(); }
+    return;
+  }
+  if(t.dataset.dizweg){
+    S.disziplinen.splice(Number(t.dataset.dizweg),1);
+    zeichne(); sichern(); return;
+  }
+  if(t.id === "notizSpeichern"){
+    const f = document.getElementById("notizNeu");
+    const text = f.value.trim();
+    if(!text) return;
+    S.notizen.push({id:Date.now()+"", text:text});
+    f.value = "";
+    zeichneNotizen(); sichern(); return;
+  }
+  if(t.dataset.notizweg){
+    S.notizen.splice(Number(t.dataset.notizweg),1);
+    zeichneNotizen(); sichern(); return;
+  }
+  if(t.dataset.notizhoch){
+    const i = Number(t.dataset.notizhoch);
+    if(i > 0){ const n = S.notizen.splice(i,1)[0]; S.notizen.splice(i-1,0,n); }
+    zeichneNotizen(); sichern(); return;
+  }
+  if(t.dataset.notizrunter !== undefined && t.dataset.notizrunter !== ""){
+    const i = Number(t.dataset.notizrunter);
+    if(i < S.notizen.length-1){ const n = S.notizen.splice(i,1)[0]; S.notizen.splice(i+1,0,n); }
+    zeichneNotizen(); sichern(); return;
+  }
   if(t.dataset.waffefrei){ S.waffen[Number(t.dataset.waffefrei)] = {name:"",bonus:0}; zeichne(); sichern(); return; }
   if(t.dataset.benutzen){ const [l,i] = t.dataset.benutzen.split(":"); gegenstandBenutzen(l, Number(i)); return; }
   if(t.dataset.ablegen){
@@ -1225,6 +1335,7 @@ document.addEventListener("change", ev=>{
     zeichne(); sichern(); return;
   }
   if(e.name === "aktiveWaffe"){ S.aktiveWaffe = Number(e.value); zeichne(); sichern(); return; }
+  if(e.id === "cbTasche"){ S.provianttasche = e.checked; zeichneRest(); zeichneRucksack(); sichern(); return; }
   if(e.id === "cbStrahl"){ S.strahlAktiv = e.checked; zeichneKopf(); aktualisiereCQ(); sichern(); return; }
   if(e.id === "cbImmun"){ S.immun = e.checked; zeichneKopf(); aktualisiereCQ(); sichern(); return; }
 
@@ -1267,7 +1378,6 @@ document.addEventListener("input", ev=>{
       S.apMax = Number(e.value||0); apSetzen(S.apJetzt); zeichneKopf(); sichern(); break;
     case "apJetzt": S.apJetzt = Math.max(0, Math.min(apMaxGesamt(), Number(e.value||0))); zeichneKopf(); sichern(); break;
     case "abschnittFeld": S.abschnitt = Math.max(1, Number(e.value||1)); zeichneKopf(); sichern(); break;
-    case "notizen": S.notizen = e.value; sichern(); break;
     case "feindName": S.feind.name = e.value; sichern(); break;
     case "feindKS": S.feind.ks = Number(e.value||0); aktualisiereCQ(); sichern(); break;
     case "feindAP": S.feind.ap = Number(e.value||0); if(!S.runden.length) S.feind.apStart = S.feind.ap; sichern(); break;
