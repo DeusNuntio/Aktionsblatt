@@ -125,11 +125,41 @@ table.kampf td.z{text-align:right;font-variant-numeric:tabular-nums}
 .protokoll{max-height:230px;overflow:auto}
 textarea{border:1px solid var(--linie);min-height:70px;background:var(--papier)}
 .warn{color:var(--rot);font-size:13px}
-.notiz{display:flex;gap:6px;align-items:flex-start;padding:8px 0;border-bottom:1px dotted var(--linie)}
-.notiz:last-child{border-bottom:0}
-.notiz .txt{flex:1;min-width:0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px}
+/* Notizen als Papierfetzen und kleine Schriftrollen */
+.notiz{display:flex;gap:6px;align-items:flex-start;position:relative;
+  padding:16px 14px 16px 16px;margin:0 2px 12px;background:#f2e7c9;
+  filter:drop-shadow(1px 2px 2px rgba(34,32,26,.28))}
+.notiz.fetzen{clip-path:polygon(
+  0 6px, 6% 0, 14% 7px, 23% 1px, 33% 6px, 44% 0, 55% 7px, 66% 1px, 77% 6px, 88% 0, 96% 7px, 100% 2px,
+  100% calc(100% - 6px), 94% 100%, 85% calc(100% - 7px), 74% 100%, 63% calc(100% - 6px),
+  52% calc(100% - 1px), 41% calc(100% - 7px), 30% 100%, 19% calc(100% - 6px), 9% calc(100% - 1px),
+  2% calc(100% - 7px), 0 calc(100% - 2px))}
+.notiz.fetzen:nth-of-type(odd){transform:rotate(-.6deg);background:#f2e7c9}
+.notiz.fetzen:nth-of-type(even){transform:rotate(.7deg);background:#efe2c0}
+.notiz.rolle{margin:14px 6px 20px;padding:16px 14px;border-radius:2px;
+  background:linear-gradient(90deg,#e3d5ab 0,#f5ecd2 7%,#f5ecd2 93%,#e3d5ab 100%)}
+.notiz.rolle::before,.notiz.rolle::after{content:"";position:absolute;left:-6px;right:-6px;height:11px;
+  background:linear-gradient(#d9c89a,#b4a173 60%,#9c8a5d);
+  border:1px solid #7d6c44;border-radius:6px}
+.notiz.rolle::before{top:-7px}
+.notiz.rolle::after{bottom:-7px}
+.notiz .txt{flex:1;min-width:0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;color:#2b2519}
 .notiz .werkzeug{display:flex;gap:4px;flex:none}
-.notiz .werkzeug button{padding:2px 7px;font-size:14px;line-height:1.2}
+.notiz .werkzeug button{padding:2px 7px;font-size:14px;line-height:1.2;background:rgba(255,255,255,.35)}
+
+/* Geldbörse */
+.boerse{display:flex;gap:10px;align-items:flex-start;padding:8px 0}
+.beutel{flex:none;width:54px;height:60px}
+.muenzfeld{flex:1;min-width:0}
+.muenzen{display:flex;flex-wrap:wrap;gap:3px;align-items:center;min-height:24px}
+.muenze{border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex:none;
+  font-family:var(--serif);color:#4e3a0d;border:1px solid #8a6a1e;
+  background:radial-gradient(circle at 34% 28%,#f6e099,#cda93a 68%,#9b7c20);
+  box-shadow:0 1px 1px rgba(34,32,26,.3)}
+.muenze.m1{width:15px;height:15px;font-size:9px}
+.muenze.m2{width:18px;height:18px;font-size:10px}
+.muenze.m5{width:22px;height:22px;font-size:11px}
+.muenzen .leerbeutel{font-size:13px;color:var(--blass);font-style:italic}
 .archiv{border-bottom:1px dotted var(--linie);padding:8px 0}
 .archiv:last-child{border-bottom:0}
 .archiv .kopfz{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
@@ -195,17 +225,6 @@ textarea{border:1px solid var(--linie);min-height:70px;background:var(--papier)}
 
   <div id="blattWolf">
     <section class="box">
-      <h2>KAI-DISZIPLINEN <span class="hinweis" id="dizZaehler">5 Fertigkeiten</span></h2>
-      <div class="inhalt">
-        <div id="dizListe"></div>
-        <div class="knopfreihe" style="justify-content:flex-start">
-          <button class="klein" id="dizPlus">+ Disziplin</button>
-        </div>
-        <div class="eff" style="padding-left:0" id="dizHinweis"></div>
-      </div>
-    </section>
-
-    <section class="box">
       <h2>WAFFEN <span class="hinweis">maximal 2</span></h2>
       <div class="inhalt" id="waffenListe"></div>
     </section>
@@ -238,15 +257,40 @@ textarea{border:1px solid var(--linie);min-height:70px;background:var(--papier)}
         </div>
         <label class="schalter"><input type="checkbox" id="cbTasche">
           Provianttasche – Mahlzeiten belegen keinen Rucksackplatz</label>
-        <div class="zeile" style="margin-top:8px">
-          <div class="gname"><div class="t">Geldbörse</div><div class="s">maximal 50 Goldkronen</div></div>
-          <div class="zaehler">
-            <button class="klein" data-gold="-1">−</button>
-            <span class="wert" id="goldWert">0</span>
-            <button class="klein" data-gold="1">+</button>
-            <button class="klein" data-gold="5">+5</button>
+        <div class="boerse" style="margin-top:8px">
+          <svg class="beutel" viewBox="0 0 64 72" aria-hidden="true">
+            <path id="beutelBauch" d="M13 30 q19 -11 38 0 q11 17 6 32 q-5 10 -25 10 q-20 0 -25 -10 q-5 -15 6 -32 z"
+                  fill="#8b6a44" stroke="#463320" stroke-width="2.4"/>
+            <path d="M17 34 q15 8 30 0" fill="none" stroke="#5f462b" stroke-width="1.6" opacity=".7"/>
+            <path d="M20 24 q12 -7 24 0 l-2 8 q-10 -5 -20 0 z" fill="#a07f52" stroke="#463320" stroke-width="2.2"/>
+            <path d="M15 27 q17 6 34 0" fill="none" stroke="#3a2a18" stroke-width="2.6" stroke-linecap="round"/>
+            <path d="M15 27 q-5 -6 2 -9 M49 27 q5 -6 -2 -9" fill="none" stroke="#3a2a18" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="32" cy="52" r="7" fill="#cda93a" stroke="#8a6a1e" stroke-width="1.4" opacity=".55"/>
+          </svg>
+          <div class="muenzfeld">
+            <div class="gname" style="margin-bottom:4px">
+              <div class="t">Geldbörse <span id="goldWert" style="color:var(--rot)">0</span> Kronen</div>
+              <div class="s">maximal 50 Goldkronen</div></div>
+            <div class="muenzen" id="muenzListe"></div>
+            <div class="knopfreihe" style="justify-content:flex-start;margin-top:6px">
+              <button class="klein" data-gold="-5">−5</button>
+              <button class="klein" data-gold="-1">−1</button>
+              <button class="klein" data-gold="1">+1</button>
+              <button class="klein" data-gold="5">+5</button>
+            </div>
           </div>
         </div>
+      </div>
+    </section>
+
+    <section class="box">
+      <h2>KAI-DISZIPLINEN <span class="hinweis" id="dizZaehler">5 Fertigkeiten</span></h2>
+      <div class="inhalt">
+        <div id="dizListe"></div>
+        <div class="knopfreihe" style="justify-content:flex-start">
+          <button class="klein" id="dizPlus">+ Disziplin</button>
+        </div>
+        <div class="eff" style="padding-left:0" id="dizHinweis"></div>
       </div>
     </section>
 
@@ -304,10 +348,14 @@ textarea{border:1px solid var(--linie);min-height:70px;background:var(--papier)}
             </select></div>
           <div style="flex:0 1 80px"><label class="klein" for="neuWert">Wert</label>
             <input id="neuWert" type="number" inputmode="numeric" value="4"></div>
-          <div style="flex:0 1 80px"><label class="klein" for="neuAnzahl">Anzahl</label>
+          <div style="flex:0 1 90px"><label class="klein" for="neuAnzahl">Portionen</label>
             <input id="neuAnzahl" type="number" inputmode="numeric" value="1" min="1"></div>
+          <div style="flex:0 1 110px"><label class="klein" for="neuProSlot">je Platz</label>
+            <input id="neuProSlot" type="number" inputmode="numeric" value="1" min="1"></div>
           <div style="flex:0 0 auto"><button class="stark" id="neuHinzu">Eintragen</button></div>
         </div>
+        <div class="eff" style="padding-left:0">Ein Heiltrank mit zwei Portionen: Portionen 2, je Platz 2 –
+          er belegt dann einen Rucksackplatz und lässt sich zweimal benutzen.</div>
         <div class="warn" id="rucksackWarnung"></div>
       </div>
     </section>
@@ -1585,8 +1633,8 @@ const STANDARD = {
 
 let S = JSON.parse(JSON.stringify(STANDARD));
 const SCHLUESSEL = "aktionsblatt:v1";
-const VERSION = "0.8";
-const VERSIONSDATUM = "08.09.2026";
+const VERSION = "0.9";
+const VERSIONSDATUM = "09.09.2026";
 
 /* Speicher: in der Claude-App window.storage, als installierte App der Gerätespeicher */
 const Speicher = {
@@ -1633,6 +1681,9 @@ function angleichen(){
   while(S.disziplinen.length < disziplinenSoll(S.buchNr)) S.disziplinen.push(null);
   if(S.disziplinen.length > DISZIPLINEN.length) S.disziplinen = S.disziplinen.slice(0, DISZIPLINEN.length);
   S.provianttasche = !!S.provianttasche;
+  [S.rucksack, S.speziell, S.katalog].forEach(arr=>{
+    if(Array.isArray(arr)) arr.forEach(g=>{ g.proSlot = Math.max(1, Number(g.proSlot||1)); });
+  });
   if(!S.bonusse || typeof S.bonusse !== "object") S.bonusse = {};
   if(!S.charakter) S.charakter = "wolf";
   if(S.charakter !== "wolf" && !bonusListe(S.buchNr).some(b=>b.id === S.charakter)) S.charakter = "wolf";
@@ -1732,8 +1783,14 @@ function grundwertSetzen(feld, wert){
   else S.apMax = Number(wert||0);
 }
 function mahlzeitenBelegen(){ return S.provianttasche ? 0 : Number(S.mahlzeiten||0); }
+/* Ein Gefäß kann mehrere Portionen fassen und belegt trotzdem nur einen Platz.
+   proSlot = Portionen je Rucksackplatz, Standard 1. */
+function plaetze(g){
+  const je = Math.max(1, Number(g.proSlot||1));
+  return Math.ceil(Math.max(0, Number(g.anzahl||1)) / je);
+}
 function rucksackBelegt(){
-  return S.rucksack.reduce((s,g)=>s+(g.anzahl||1),0) + mahlzeitenBelegen();
+  return S.rucksack.reduce((s,g)=>s+plaetze(g),0) + mahlzeitenBelegen();
 }
 
 /* ---------------- Darstellung ---------------- */
@@ -1916,7 +1973,10 @@ function gegenstandZeile(g,i,liste){
   el.className = "gegenstand" + (liste === "speziell" ? " sp" : "");
   const zusatz = [];
   if(g.effekt && g.effekt !== "keiner") zusatz.push(effektText(g));
-  if((g.anzahl||1) > 1) zusatz.push(g.anzahl + "×");
+  const je = Math.max(1, Number(g.proSlot||1)), n = Number(g.anzahl||1);
+  if(je > 1) zusatz.push(n + (n === 1 ? " Portion" : " Portionen") +
+                         " · " + plaetze(g) + (plaetze(g) === 1 ? " Platz" : " Plätze"));
+  else if(n > 1) zusatz.push(n + "×");
   el.innerHTML = `<div class="gname"><div class="t">${esc(g.name)}</div>
       <div class="s">${zusatz.join(" · ")}</div></div>`;
   if(g.effekt === "ap" || g.effekt === "mahlzeit"){
@@ -1962,7 +2022,8 @@ function zeichneRucksack(){
     dinge.forEach((d,i)=>{
       const mark = d.k === "S" ? "◆ " : "";
       const zus = d.e ? " (" + effektText({effekt:d.e,wert:d.w}) + ")" : "";
-      bl.innerHTML += `<option value="${i}">${mark}${esc(d.n)}${zus}</option>`;
+      const por = d.p > 1 ? " – " + d.p + " Portionen" : "";
+      bl.innerHTML += `<option value="${i}">${mark}${esc(d.n)}${zus}${por}</option>`;
     });
     bl.disabled = false;
   } else {
@@ -1982,7 +2043,7 @@ function zeichneRest(){
   const af = document.getElementById("abschnittFeld");
   if(document.activeElement !== af) af.value = S.abschnitt;
   document.getElementById("mahlWert").textContent = S.mahlzeiten;
-  document.getElementById("goldWert").textContent = S.gold;
+  zeichneBoerse();
   document.getElementById("heilHinweis").textContent =
     hatDisziplin("heilung") ? "Heilung: +1 AP je Abschnitt ohne Kampf"
                             : "Hier stehen bleiben, wo du aufhörst";
@@ -1995,6 +2056,27 @@ function zeichneRest(){
   zeichneNotizen();
 }
 
+/* Geldbörse: der Betrag wird in Münzen zu 5, 2 und 1 Krone zerlegt,
+   damit der Beutel auch bei 50 Kronen übersichtlich bleibt. */
+function zeichneBoerse(){
+  const g = Math.max(0, Math.min(50, Number(S.gold||0)));
+  document.getElementById("goldWert").textContent = g;
+  const fuenf = Math.floor(g / 5), rest = g % 5;
+  const zwei = Math.floor(rest / 2), eins = rest % 2;
+  let h = "";
+  for(let i=0;i<fuenf;i++) h += '<span class="muenze m5">5</span>';
+  for(let i=0;i<zwei;i++)  h += '<span class="muenze m2">2</span>';
+  for(let i=0;i<eins;i++)  h += '<span class="muenze m1">1</span>';
+  document.getElementById("muenzListe").innerHTML =
+    h || '<span class="leerbeutel">Der Beutel ist leer.</span>';
+  const bauch = document.getElementById("beutelBauch");
+  if(bauch){
+    /* der Beutel wird mit steigendem Inhalt ein wenig praller */
+    const f = 1 + (g / 50) * 0.14;
+    bauch.setAttribute("transform", "translate(32 62) scale(" + f.toFixed(3) + " " + f.toFixed(3) + ") translate(-32 -62)");
+  }
+}
+
 function zeichneNotizen(){
   const w = document.getElementById("notizListe");
   document.getElementById("notizZaehler").textContent =
@@ -2003,7 +2085,8 @@ function zeichneNotizen(){
   w.innerHTML = "";
   S.notizen.forEach((n,i)=>{
     const el = document.createElement("div");
-    el.className = "notiz";
+    /* jede dritte Notiz wird als kleine Schriftrolle gezeigt, der Rest als Papierfetzen */
+    el.className = "notiz " + (i % 3 === 2 ? "rolle" : "fetzen");
     el.innerHTML = `<div class="txt">${esc(n.text)}</div>
       <div class="werkzeug">
         <button class="klein leise" data-notizhoch="${i}" ${i===0?"disabled":""} aria-label="nach oben">↑</button>
@@ -2375,7 +2458,8 @@ function gegenstandBenutzen(liste,i){
 
 function inKatalog(g){
   if(!S.katalog.some(k=>k.name.toLowerCase()===g.name.toLowerCase() && k.effekt===g.effekt))
-    S.katalog.push({name:g.name, effekt:g.effekt, wert:g.wert, liste:g.liste});
+    S.katalog.push({name:g.name, effekt:g.effekt, wert:g.wert, liste:g.liste,
+                    proSlot:Math.max(1,Number(g.proSlot||1))});
 }
 
 function hinzufuegen(g){
@@ -2383,12 +2467,16 @@ function hinzufuegen(g){
   warn.textContent = "";
   if(!g.name){ warn.textContent = "Bitte einen Namen eintragen."; return; }
   if(g.liste === "rucksack"){
-    if(rucksackBelegt() + (g.anzahl||1) > 8){
+    const vorhanden = S.rucksack.find(x=>x.name.toLowerCase()===g.name.toLowerCase() &&
+      x.effekt===g.effekt && Math.max(1,Number(x.proSlot||1))===Math.max(1,Number(g.proSlot||1)));
+    const nachher = vorhanden
+      ? rucksackBelegt() - plaetze(vorhanden) + plaetze({anzahl:(vorhanden.anzahl||1)+(g.anzahl||1), proSlot:g.proSlot})
+      : rucksackBelegt() + plaetze(g);
+    if(nachher > 8){
       warn.textContent = "Der Rucksack fasst nur 8 Gegenstände" +
         (mahlzeitenBelegen() ? " – Mahlzeiten zählen mit." : ". Erst etwas ablegen.");
       return;
     }
-    const vorhanden = S.rucksack.find(x=>x.name.toLowerCase()===g.name.toLowerCase() && x.effekt===g.effekt);
     if(vorhanden) vorhanden.anzahl = (vorhanden.anzahl||1) + (g.anzahl||1);
     else S.rucksack.push(g);
   } else S.speziell.push(g);
@@ -2396,11 +2484,14 @@ function hinzufuegen(g){
   zeichne(); sichern();
 }
 
-function formularFuellen(name, liste, effekt, wert){
+function formularFuellen(name, liste, effekt, wert, proSlot){
   document.getElementById("neuName").value = name;
   document.getElementById("neuTyp").value = liste;
   document.getElementById("neuEffekt").value = effekt || "keiner";
   document.getElementById("neuWert").value = wert || 0;
+  const je = Math.max(1, Number(proSlot||1));
+  document.getElementById("neuProSlot").value = je;
+  document.getElementById("neuAnzahl").value = je;
 }
 
 function tabZeigen(name){
@@ -2517,10 +2608,12 @@ document.addEventListener("click", ev=>{
       liste: document.getElementById("neuTyp").value,
       effekt: document.getElementById("neuEffekt").value,
       wert: Number(document.getElementById("neuWert").value||0),
-      anzahl: Math.max(1, Number(document.getElementById("neuAnzahl").value||1))
+      anzahl: Math.max(1, Number(document.getElementById("neuAnzahl").value||1)),
+      proSlot: Math.max(1, Number(document.getElementById("neuProSlot").value||1))
     });
     document.getElementById("neuName").value = "";
     document.getElementById("neuAnzahl").value = 1;
+    document.getElementById("neuProSlot").value = 1;
     return;
   }
 
@@ -2600,14 +2693,14 @@ document.addEventListener("change", ev=>{
 
   if(e.id === "buchWahl" && e.value !== ""){
     const d = BUCHDINGE[S.buchNr][Number(e.value)];
-    formularFuellen(d.n, d.k === "S" ? "speziell" : "rucksack", d.e, d.w);
+    formularFuellen(d.n, d.k === "S" ? "speziell" : "rucksack", d.e, d.w, d.p);
     e.value = "";
     status(d.k === "S" ? "Spezieller Gegenstand – zählt nicht zu den 8." : "Rucksack-Gegenstand.");
     return;
   }
   if(e.id === "katalogWahl" && e.value !== ""){
     const g = S.katalog[Number(e.value)];
-    formularFuellen(g.name, g.liste || "rucksack", g.effekt, g.wert);
+    formularFuellen(g.name, g.liste || "rucksack", g.effekt, g.wert, g.proSlot);
     e.value = "";
     return;
   }
