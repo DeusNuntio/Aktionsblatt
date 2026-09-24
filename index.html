@@ -587,11 +587,42 @@ const BUCHTITEL = {
    Buch 1 fünf, danach je Band eine mehr. */
 function disziplinenSoll(buch){ return Math.max(5, Math.min(DISZIPLINEN.length, 4 + Number(buch||1))); }
 
+/* Fertigkeitenlisten der Bonus-Abenteuer.
+   fam = Familie, stufe = Stufe I–III. Voraussetzung ist stets die Vorstufe derselben Familie.
+   Die Wirkung der höheren Stufe ersetzt die der niedrigeren, sie addiert sich nicht. */
+const FERTIGKEITEN = {
+  ritter:[
+    {id:"waffe1", fam:"waffe", stufe:1, name:"Waffenstärke (Stufe I)",
+     eff:"Der Schaden, den du in jeder Kampfrunde erleidest, sinkt um 1 Ausdauerpunkt."},
+    {id:"waffe2", fam:"waffe", stufe:2, name:"Waffenstärke (Stufe II)",
+     eff:"Der Schaden, den du in jeder Kampfrunde erleidest, sinkt um 2 Ausdauerpunkte."},
+    {id:"waffe3", fam:"waffe", stufe:3, name:"Waffenstärke (Stufe III)",
+     eff:"Der Schaden, den du in jeder Kampfrunde erleidest, sinkt um 3 Ausdauerpunkte."},
+    {id:"schlag1", fam:"schlag", stufe:1, name:"Vernichtender Schlag (Stufe I)",
+     eff:"Schaden an leblosen Objekten wird verdoppelt."},
+    {id:"schlag2", fam:"schlag", stufe:2, name:"Vernichtender Schlag (Stufe II)",
+     eff:"Schaden an leblosen Objekten wird verdreifacht."},
+    {id:"schlag3", fam:"schlag", stufe:3, name:"Vernichtender Schlag (Stufe III)",
+     eff:"Schaden an leblosen Objekten wird vervierfacht; auch magische Gegenstände lassen sich zerstören."},
+    {id:"klinge1", fam:"klinge", stufe:1, name:"Klingensturm (Stufe I)",
+     eff:"+1 Kampfstärke im Kampf gegen Lebewesen."},
+    {id:"klinge2", fam:"klinge", stufe:2, name:"Klingensturm (Stufe II)",
+     eff:"+2 Kampfstärke im Kampf gegen Lebewesen."},
+    {id:"klinge3", fam:"klinge", stufe:3, name:"Klingensturm (Stufe III)",
+     eff:"+3 Kampfstärke im Kampf gegen Lebewesen."}
+  ]
+};
+const ROEMISCH = {1:"I", 2:"II", 3:"III"};
+
 /* Bonus-Aktionsblätter je Band – eigenständige Charaktere aus den Verlags-Downloads.
    typ "liste" = nummerierte Zeilen, "text" = eine Zeile, "zahl" = Zähler. */
 const BONUS = {
   2:[{id:"rhygar", name:"Rhygar", titel:"RHYGARS AKTIONSBLATT",
-      felder:[{k:"faehig", typ:"liste", label:"Ritterliche Fähigkeiten", n:5}]}],
+      felder:[{k:"faehig", typ:"fertigkeiten", katalog:"ritter", n:5,
+               label:"Ritterliche Fähigkeiten",
+               hinweis:"Oberstatthalter Rhygar ist kein Kai-Lord. Er wählt bis zu fünf Fertigkeiten " +
+                       "eines Ritters vom Weißen Berg. Eine höhere Stufe setzt die Vorstufe voraus " +
+                       "und ersetzt deren Wirkung."}]}],
   3:[{id:"loikymar", name:"Loi-Kymar", titel:"LOI-KYMARS AKTIONSBLATT",
       felder:[{k:"kraeuter", typ:"liste", label:"Kräuter-Beutel", n:6},
               {k:"extra", typ:"text", label:"Zusätzlicher Gegenstand"}]}],
@@ -1626,15 +1657,15 @@ const STANDARD = {
   aktiveWaffe:0,
   rucksack:[], speziell:[], katalog:[], gegnerKatalog:[], archiv:[],
   mahlzeiten:0, gold:0, abschnitt:1, notizen:[], provianttasche:false, zuletzt:"",
-  feind:{name:"",ks:0,ap:0,apStart:0}, strahlAktiv:true, immun:false, modifikator:0,
+  feind:{name:"",ks:0,ap:0,apStart:0}, strahlAktiv:true, immun:false, modifikator:0, objektGegner:false,
   runden:[],
   charakter:"wolf", bonusse:{}
 };
 
 let S = JSON.parse(JSON.stringify(STANDARD));
 const SCHLUESSEL = "aktionsblatt:v1";
-const VERSION = "0.9";
-const VERSIONSDATUM = "09.09.2026";
+const VERSION = "1.0";
+const VERSIONSDATUM = "24.09.2026";
 
 /* Speicher: in der Claude-App window.storage, als installierte App der Gerätespeicher */
 const Speicher = {
@@ -1685,6 +1716,17 @@ function angleichen(){
     if(Array.isArray(arr)) arr.forEach(g=>{ g.proSlot = Math.max(1, Number(g.proSlot||1)); });
   });
   if(!S.bonusse || typeof S.bonusse !== "object") S.bonusse = {};
+  S.objektGegner = !!S.objektGegner;
+  /* Rhygars Fähigkeiten sind seit Version 1.0 Kennungen aus FERTIGKEITEN, nicht mehr freier Text */
+  Object.keys(BONUS).forEach(b=>BONUS[b].forEach(def=>{
+    const d = S.bonusse[def.id]; if(!d || !d.felder) return;
+    def.felder.forEach(f=>{
+      if(f.typ !== "fertigkeiten") return;
+      const kat = FERTIGKEITEN[f.katalog] || [];
+      const alt = Array.isArray(d.felder[f.k]) ? d.felder[f.k] : [];
+      d.felder[f.k] = alt.map(x=> kat.some(y=>y.id === x) ? x : null);
+    });
+  }));
   if(!S.charakter) S.charakter = "wolf";
   if(S.charakter !== "wolf" && !bonusListe(S.buchNr).some(b=>b.id === S.charakter)) S.charakter = "wolf";
 }
@@ -1730,6 +1772,44 @@ function bonusAktiv(){
 }
 function heldName(){ const b = bonusAktiv(); return b ? b.def.name : "Einsamer Wolf"; }
 
+/* Fertigkeiten eines Bonus-Charakters */
+function fertFeld(){
+  const b = bonusAktiv(); if(!b) return null;
+  const f = b.def.felder.find(x=>x.typ === "fertigkeiten");
+  if(!f) return null;
+  const kat = FERTIGKEITEN[f.katalog] || [];
+  if(!Array.isArray(b.d.felder[f.k])) b.d.felder[f.k] = [];
+  return {def:f, kat:kat, gewaehlt:b.d.felder[f.k], daten:b.d};
+}
+/* höchste gewählte Stufe einer Familie – Stufe III ersetzt I und II */
+function fertStufe(fam){
+  const ff = fertFeld(); if(!ff) return 0;
+  let max = 0;
+  ff.gewaehlt.forEach(id=>{
+    const x = ff.kat.find(y=>y.id === id);
+    if(x && x.fam === fam && x.stufe > max) max = x.stufe;
+  });
+  return max;
+}
+/* entfernt Fertigkeiten, deren Vorstufe fehlt */
+function fertPruefen(){
+  const ff = fertFeld(); if(!ff) return false;
+  let geaendert = false, nochmal = true;
+  while(nochmal){
+    nochmal = false;
+    ff.gewaehlt.forEach((id,i)=>{
+      if(!id) return;
+      const x = ff.kat.find(y=>y.id === id);
+      if(!x || x.stufe === 1) return;
+      const vor = ff.kat.find(y=>y.fam === x.fam && y.stufe === x.stufe - 1);
+      if(!vor || !ff.gewaehlt.includes(vor.id)){
+        ff.gewaehlt[i] = null; geaendert = true; nochmal = true;
+      }
+    });
+  }
+  return geaendert;
+}
+
 /* ---------------- Berechnungen ---------------- */
 
 function hatDisziplin(id){ return S.charakter === "wolf" && S.disziplinen.includes(id); }
@@ -1747,6 +1827,8 @@ function waffenkundeGreift(){
 function ksBoniListe(){
   const b = [];
   if(bonusAktiv()){
+    const kl = fertStufe("klinge");
+    if(kl && !S.objektGegner) b.push({t:"Klingensturm " + ROEMISCH[kl], v:kl});
     if(Number(S.modifikator)) b.push({t:"Modifikator", v:Number(S.modifikator)});
     return b;
   }
@@ -1924,8 +2006,42 @@ function zeichneBonusblatt(){
 
   let h = "";
   bon.def.felder.forEach(f=>{
-    h += `<section class="box bonusbox"><h2>${esc(f.label.toUpperCase())}</h2><div class="inhalt">`;
-    if(f.typ === "liste"){
+    let kopfzusatz = "";
+    if(f.typ === "fertigkeiten"){
+      const teile = [];
+      if(fertStufe("waffe"))  teile.push("−" + fertStufe("waffe") + " erlittener Schaden");
+      if(fertStufe("klinge")) teile.push("+" + fertStufe("klinge") + " KS gegen Lebewesen");
+      if(fertStufe("schlag")) teile.push("×" + (fertStufe("schlag") + 1) + " gegen Objekte");
+      if(teile.length) kopfzusatz = ` <span class="hinweis">${esc(teile.join(" · "))}</span>`;
+    }
+    h += `<section class="box bonusbox"><h2>${esc(f.label.toUpperCase())}${kopfzusatz}</h2><div class="inhalt">`;
+    if(f.typ === "fertigkeiten"){
+      const kat = FERTIGKEITEN[f.katalog] || [];
+      if(!Array.isArray(bon.d.felder[f.k])) bon.d.felder[f.k] = [];
+      const gew = bon.d.felder[f.k];
+      const belegt = gew.filter(Boolean).length;
+      for(let i=0;i<f.n;i++){
+        const aktuell = gew[i] || "";
+        const andere = gew.filter((x,j)=>x && j !== i);
+        let opt = '<option value="">– frei –</option>';
+        kat.forEach(x=>{
+          if(andere.includes(x.id) && x.id !== aktuell) return;
+          if(x.stufe > 1){
+            const vor = kat.find(y=>y.fam === x.fam && y.stufe === x.stufe - 1);
+            if(!vor || (!andere.includes(vor.id) && x.id !== aktuell)) return;
+          }
+          opt += `<option value="${x.id}"${x.id === aktuell ? " selected" : ""}>${esc(x.name)}</option>`;
+        });
+        h += `<div class="zeile"><span class="nr">${i+1}</span>
+              <select data-bfert="${f.k}" data-bidx="${i}">${opt}</select></div>`;
+        if(aktuell){
+          const x = kat.find(y=>y.id === aktuell);
+          if(x) h += `<div class="eff">${esc(x.eff)}</div>`;
+        }
+      }
+      h += `<div class="eff" style="padding-left:0">${esc(f.hinweis || "")}
+            <b style="display:block;margin-top:4px">${belegt} von ${f.n} gewählt</b></div>`;
+    } else if(f.typ === "liste"){
       for(let i=0;i<f.n;i++){
         const v = (bon.d.felder[f.k] && bon.d.felder[f.k][i]) || "";
         h += `<div class="zeile"><span class="nr">${i+1}</span>
@@ -2145,6 +2261,19 @@ function zeichneKampf(){
   if(hatDisziplin("strahl")){
     sw.innerHTML += `<label class="schalter"><input type="checkbox" id="cbStrahl" ${S.strahlAktiv?"checked":""}> Gedankenstrahl einsetzen (+2)</label>`;
     sw.innerHTML += `<label class="schalter"><input type="checkbox" id="cbImmun" ${S.immun?"checked":""}> Gegner ist immun gegen den Gedankenstrahl</label>`;
+  }
+  const ff = fertFeld();
+  if(ff){
+    sw.innerHTML += `<label class="schalter"><input type="checkbox" id="cbObjekt" ${S.objektGegner?"checked":""}>
+      Gegner ist ein lebloses Objekt (Tür, Schild, Waffe)</label>`;
+    const wirk = [];
+    if(fertStufe("waffe"))  wirk.push("Waffenstärke " + ROEMISCH[fertStufe("waffe")] +
+                                      ": −" + fertStufe("waffe") + " AP Schaden je Runde");
+    if(!S.objektGegner && fertStufe("klinge")) wirk.push("Klingensturm " + ROEMISCH[fertStufe("klinge")] +
+                                      ": +" + fertStufe("klinge") + " Kampfstärke");
+    if(S.objektGegner && fertStufe("schlag")) wirk.push("Vernichtender Schlag " + ROEMISCH[fertStufe("schlag")] +
+                                      ": Schaden ×" + (fertStufe("schlag") + 1));
+    if(wirk.length) sw.innerHTML += `<div class="eff" style="padding-left:0">${esc(wirk.join(" · "))}</div>`;
   }
   sw.innerHTML += `<div class="hinzu" style="border:0;padding-top:4px"><div style="flex:0 1 140px">
       <label class="klein" for="modFeld">Weiterer Modifikator</label>
@@ -2421,6 +2550,20 @@ function kampfrunde(flucht, zahl){
   let vFeind = paar[0], vEW = paar[1];
   if(flucht) vFeind = 0;
 
+  /* Fertigkeiten der Bonus-Charaktere */
+  const hinweise = [];
+  const ws = fertStufe("waffe");
+  if(ws && vEW !== "T"){
+    const vorher = vEW;
+    vEW = Math.max(0, vEW - ws);
+    if(vorher !== vEW) hinweise.push("Waffenstärke " + ROEMISCH[ws] + ": −" + (vorher - vEW) + " Schaden");
+  }
+  const vs = fertStufe("schlag");
+  if(vs && S.objektGegner && !flucht && vFeind !== "T" && vFeind > 0){
+    vFeind = vFeind * (vs + 1);
+    hinweise.push("Vernichtender Schlag " + ROEMISCH[vs] + ": Schaden ×" + (vs + 1));
+  }
+
   if(vEW === "T") apSetzen(0); else apSetzen(apJetztWert() - vEW);
   if(vFeind === "T") S.feind.ap = 0; else S.feind.ap = Math.max(0, Number(S.feind.ap||0) - vFeind);
 
@@ -2428,9 +2571,11 @@ function kampfrunde(flucht, zahl){
 
   const name = heldName();
   let text = `<span class="zz">${zz}</span> Kampfquotient ${cq>0?"+":""}${cq}. `;
-  text += vEW === "T" ? `<span class="tot">${esc(name)}: Tod.</span> ` : `${esc(name)} −${vEW} AP. `;
+  text += vEW === "T" ? `<span class="tot">${esc(name)}: Tod.</span> `
+        : (vEW === 0 ? `${esc(name)} bleibt unverletzt. ` : `${esc(name)} −${vEW} AP. `);
   if(flucht) text += "Flucht: der Gegner erleidet keinen Verlust.";
   else text += vFeind === "T" ? '<span class="tot">Gegner: Tod.</span>' : `Gegner −${vFeind} AP.`;
+  if(hinweise.length) text += `<div class="eff" style="padding-left:0;margin-top:4px">${esc(hinweise.join(" · "))}</div>`;
 
   if(apJetztWert() <= 0){
     text += ' <span class="tot">Das Abenteuer ist beendet.</span>';
@@ -2515,7 +2660,7 @@ document.addEventListener("click", ev=>{
 
   if(t.dataset.held){
     S.charakter = t.dataset.held;
-    S.runden = []; S.modifikator = 0;
+    S.runden = []; S.modifikator = 0; S.objektGegner = false;
     zeichne(); tabZeigen("blatt"); sichern(); return;
   }
   if(t.dataset.karte){ Karte.waehle(Number(t.dataset.karte), false); return; }
@@ -2622,6 +2767,7 @@ document.addEventListener("click", ev=>{
   if(t.id === "kampfReset"){
     kampfArchivieren("abgebrochen");
     S.feind = {name:"",ks:0,ap:0,apStart:0}; S.runden = []; S.modifikator = 0; S.immun = false;
+    S.objektGegner = false;
     document.getElementById("kampfErgebnis").textContent = "Gegnerwerte eintragen und Runde auslösen.";
     zeichne(); sichern(); return;
   }
@@ -2690,6 +2836,13 @@ document.addEventListener("change", ev=>{
   if(e.id === "cbTasche"){ S.provianttasche = e.checked; zeichneRest(); zeichneRucksack(); sichern(); return; }
   if(e.id === "cbStrahl"){ S.strahlAktiv = e.checked; zeichneKopf(); aktualisiereCQ(); sichern(); return; }
   if(e.id === "cbImmun"){ S.immun = e.checked; zeichneKopf(); aktualisiereCQ(); sichern(); return; }
+  if(e.id === "cbObjekt"){ S.objektGegner = e.checked; zeichne(); sichern(); return; }
+  if(e.dataset && e.dataset.bfert !== undefined){
+    const ff = fertFeld(); if(!ff) return;
+    ff.gewaehlt[Number(e.dataset.bidx)] = e.value || null;
+    if(fertPruefen()) status("Fertigkeiten ohne Vorstufe wurden entfernt.");
+    zeichne(); sichern(); return;
+  }
 
   if(e.id === "buchWahl" && e.value !== ""){
     const d = BUCHDINGE[S.buchNr][Number(e.value)];
