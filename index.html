@@ -742,6 +742,34 @@ const DISZIPLINEN = [
   {id:"materie",  name:"Geist über Materie", eff:"Kleine Objekte durch Konzentration bewegen."}
 ];
 
+/* Gegenstände mit eigenen Regeln. Erkennung über das Feld `sonder`,
+   ersatzweise über den Namen, damit auch von Hand eingetragene Stücke greifen. */
+const SONDERGEGENSTAENDE = {
+  sommerswerd:{
+    name:"Sommerswerd",
+    waffe:true,
+    ks:8, ksMitWaffenkunde:10,
+    waffenkunden:["Schwert","Breitschwert","Kurzschwert"],
+    untotVerdoppelt:true,
+    kurz:"+8 KS · +10 mit Waffenkunde Schwert · doppelter Schaden an Untoten",
+    text:"Zählt im Kampf als einhändiges Schwert, gleich welche Waffenkunde du besitzt. " +
+         "+8 Kampfstärke, mit Waffenkunde Schwert, Breitschwert oder Kurzschwert +10 – " +
+         "die +2 der Waffenkunde sind darin enthalten, sie kommen nicht noch einmal obendrauf. " +
+         "Absorbiert jede Magie, die gegen den Träger gerichtet wird. " +
+         "Verdoppelt alle Ausdauerpunkte, die ein untoter Gegner im Kampf verliert. " +
+         "Nur in der Hand eines Kai-Lords entfaltet sich diese Macht."
+  }
+};
+function sonderKennung(g){
+  if(!g) return "";
+  if(g.sonder && SONDERGEGENSTAENDE[g.sonder]) return g.sonder;
+  const n = String(g.name || g).toLowerCase();
+  for(const k in SONDERGEGENSTAENDE){
+    if(n === SONDERGEGENSTAENDE[k].name.toLowerCase()) return k;
+  }
+  return "";
+}
+
 /* Gegenstandssymbole – abgeleitet aus Name und Effekt */
 function symbolFuer(g){
   const n = String(g.name || "").toLowerCase();
@@ -866,7 +894,7 @@ const BUCHDINGE = {
  {n:"Goldring", o:"Gold Ring", k:"R"},
  {n:"Schild", o:"Shield", k:"S", e:"ks", w:2},
  {n:"Fahrschein nach Port Bax", o:"Ticket to Port Bax", k:"S"},
- {n:"Sommerswerd", o:"Sommerswerd", k:"S", e:"ks", w:8},
+ {n:"Sommerswerd", o:"Sommerswerd", k:"S", s:"sommerswerd"},
  {n:"Magischer Speer", o:"Magic Spear", k:"S"},
  {n:"Siegel von Hammerdal", o:"Seal of Hammerdal", k:"S"},
  {n:"Papiere", o:"Papers", k:"S"},
@@ -1867,14 +1895,15 @@ const STANDARD = {
   aktiveWaffe:0,
   rucksack:[], speziell:[], katalog:[], gegnerKatalog:[], archiv:[],
   mahlzeiten:0, gold:0, abschnitt:1, notizen:[], provianttasche:false, zuletzt:"",
-  feind:{name:"",ks:0,ap:0,apStart:0}, strahlAktiv:true, immun:false, modifikator:0, objektGegner:false,
+  feind:{name:"",ks:0,ap:0,apStart:0}, strahlAktiv:true, immun:false, modifikator:0,
+  objektGegner:false, untoterGegner:false,
   runden:[], pfad:[],
   charakter:"wolf", bonusse:{}, thema:"auto"
 };
 
 let S = JSON.parse(JSON.stringify(STANDARD));
 const SCHLUESSEL = "aktionsblatt:v1";
-const VERSION = "1.1";
+const VERSION = "1.2";
 const VERSIONSDATUM = "26.09.2026";
 
 /* Speicher: in der Claude-App window.storage, als installierte App der Gerätespeicher */
@@ -1908,7 +1937,7 @@ function angleichen(){
   while(S.waffen.length < 2) S.waffen.push({name:"",bonus:0});
   S.waffen = S.waffen.slice(0,2);
   S.waffenkundeWaffe = String(S.waffenkundeWaffe||"").replace(/\s*\(\d\)\s*$/,"");
-  if(S.aktiveWaffe !== 0 && S.aktiveWaffe !== 1) S.aktiveWaffe = 0;
+  if(S.aktiveWaffe !== 0 && S.aktiveWaffe !== 1 && S.aktiveWaffe !== "sw") S.aktiveWaffe = 0;
   if(!S.buchNr) S.buchNr = 1;
   if(!Array.isArray(S.gegnerKatalog)) S.gegnerKatalog = [];
   if(!Array.isArray(S.archiv)) S.archiv = [];
@@ -1927,6 +1956,12 @@ function angleichen(){
   });
   if(!S.bonusse || typeof S.bonusse !== "object") S.bonusse = {};
   S.objektGegner = !!S.objektGegner;
+  S.untoterGegner = !!S.untoterGegner;
+  /* Kennung nachtragen, damit ältere Spielstände die Sonderregeln bekommen */
+  [S.rucksack, S.speziell, S.katalog].forEach(arr=>{
+    if(!Array.isArray(arr)) return;
+    arr.forEach(g=>{ const k = sonderKennung(g); if(k) g.sonder = k; });
+  });
   if(!Array.isArray(S.pfad)) S.pfad = [];
   if(["auto","hell","dunkel"].indexOf(S.thema) < 0) S.thema = "auto";
   /* Rhygars Fähigkeiten sind seit Version 1.0 Kennungen aus FERTIGKEITEN, nicht mehr freier Text */
@@ -2033,14 +2068,34 @@ function fertPruefen(){
 
 function hatDisziplin(id){ return S.charakter === "wolf" && S.disziplinen.includes(id); }
 function alleDinge(){ return S.rucksack.concat(S.speziell); }
+/* Sommerswerd – geführt wie eine Waffe, aber mit eigenen Regeln */
+function sonderDabei(kennung){
+  return alleDinge().some(g=>sonderKennung(g) === kennung);
+}
+function sommerswerdWaffenkunde(){
+  const def = SONDERGEGENSTAENDE.sommerswerd;
+  return hatDisziplin("waffe") &&
+         def.waffenkunden.some(w=>w.toLowerCase() === String(S.waffenkundeWaffe||"").trim().toLowerCase());
+}
+function sommerswerdBonus(){
+  const def = SONDERGEGENSTAENDE.sommerswerd;
+  return sommerswerdWaffenkunde() ? def.ksMitWaffenkunde : def.ks;
+}
+function sommerswerdGefuehrt(){ return S.aktiveWaffe === "sw" && sonderDabei("sommerswerd"); }
+
 function aktiveWaffe(){
+  if(sommerswerdGefuehrt())
+    return {name:"Sommerswerd", bonus:sommerswerdBonus(), sonder:"sommerswerd"};
   let i = S.aktiveWaffe;
+  if(i === "sw") i = 0;
   if(!S.waffen[i] || !S.waffen[i].name) i = S.waffen.findIndex(w=>w.name);
   return i >= 0 ? S.waffen[i] : null;
 }
 function waffenkundeGreift(){
   const w = aktiveWaffe();
-  if(!hatDisziplin("waffe") || !S.waffenkundeWaffe || !w) return false;
+  /* beim Sommerswerd steckt die Waffenkunde schon im Bonus */
+  if(!w || w.sonder === "sommerswerd") return false;
+  if(!hatDisziplin("waffe") || !S.waffenkundeWaffe) return false;
   return w.name.trim().toLowerCase() === S.waffenkundeWaffe.trim().toLowerCase();
 }
 function ksBoniListe(){
@@ -2053,10 +2108,16 @@ function ksBoniListe(){
   }
   const w = aktiveWaffe();
   if(!w) b.push({t:"ohne Waffe", v:-4});
+  else if(w.sonder === "sommerswerd")
+    b.push({t:"Sommerswerd" + (sommerswerdWaffenkunde() ? " mit Waffenkunde" : ""), v:Number(w.bonus)});
   else if(Number(w.bonus)) b.push({t:w.name, v:Number(w.bonus)});
   if(waffenkundeGreift()) b.push({t:"Waffenkunde", v:2});
   if(hatDisziplin("strahl") && S.strahlAktiv && !S.immun) b.push({t:"Gedankenstrahl", v:2});
-  alleDinge().forEach(g=>{ if(g.effekt === "ks" && Number(g.wert)) b.push({t:g.name, v:Number(g.wert)}); });
+  /* Sondergegenstände wirken über ihre eigene Regel, nicht als getragener Bonus */
+  alleDinge().forEach(g=>{
+    if(sonderKennung(g)) return;
+    if(g.effekt === "ks" && Number(g.wert)) b.push({t:g.name, v:Number(g.wert)});
+  });
   if(Number(S.modifikator)) b.push({t:"Modifikator", v:Number(S.modifikator)});
   return b;
 }
@@ -2289,6 +2350,22 @@ function zeichneWaffen(){
          ${wf.name ? "durch diese Waffe" : "– erst eine Waffe wählen"}</div>`;
     w.appendChild(box);
   }
+  if(sonderDabei("sommerswerd")){
+    const def = SONDERGEGENSTAENDE.sommerswerd;
+    const box = document.createElement("div");
+    box.className = "waffe";
+    box.innerHTML =
+      `<div class="oben">
+         <input type="radio" name="aktiveWaffe" value="sw" ${sommerswerdGefuehrt()?"checked":""}
+           aria-label="Sommerswerd im Kampf führen">
+         <div class="gname"><div class="t" style="color:var(--siegel)">Sommerswerd</div>
+           <div class="s">${esc(def.kurz)}</div></div>
+       </div>
+       <div class="unten">Kampfstärke
+         <span style="color:var(--rot);font-size:15px">+${sommerswerdBonus()}</span>
+         ${sommerswerdWaffenkunde() ? "mit Waffenkunde Schwert" : "ohne passende Waffenkunde"}</div>`;
+    w.appendChild(box);
+  }
   const hinw = document.createElement("div");
   hinw.className = "eff"; hinw.style.paddingLeft = "0";
   hinw.innerHTML = aktiveWaffe()
@@ -2392,7 +2469,9 @@ function gegenstandZeile(g,i,liste){
   const el = document.createElement("div");
   el.className = "gegenstand" + (liste === "speziell" ? " sp" : "");
   const zusatz = [];
-  if(g.effekt && g.effekt !== "keiner") zusatz.push(effektText(g));
+  const sk = sonderKennung(g);
+  if(sk) zusatz.push(SONDERGEGENSTAENDE[sk].kurz);
+  if(g.effekt && g.effekt !== "keiner" && !sk) zusatz.push(effektText(g));
   const je = Math.max(1, Number(g.proSlot||1)), n = Number(g.anzahl||1);
   if(je > 1) zusatz.push(n + (n === 1 ? " Portion" : " Portionen") +
                          " · " + plaetze(g) + (plaetze(g) === 1 ? " Platz" : " Plätze"));
@@ -2411,6 +2490,15 @@ function gegenstandZeile(g,i,liste){
   d.className = "klein leise"; d.textContent = "Ablegen";
   d.dataset.ablegen = liste + ":" + i;
   el.appendChild(d);
+  if(sk){
+    const huelle = document.createElement("div");
+    huelle.appendChild(el);
+    const t = document.createElement("div");
+    t.className = "eff"; t.style.paddingLeft = "34px";
+    t.textContent = SONDERGEGENSTAENDE[sk].text;
+    huelle.appendChild(t);
+    return huelle;
+  }
   return el;
 }
 
@@ -2568,6 +2656,17 @@ function zeichneKampf(){
   if(hatDisziplin("strahl")){
     sw.innerHTML += `<label class="schalter"><input type="checkbox" id="cbStrahl" ${S.strahlAktiv?"checked":""}> Gedankenstrahl einsetzen (+2)</label>`;
     sw.innerHTML += `<label class="schalter"><input type="checkbox" id="cbImmun" ${S.immun?"checked":""}> Gegner ist immun gegen den Gedankenstrahl</label>`;
+  }
+  if(sonderDabei("sommerswerd")){
+    sw.innerHTML += `<label class="schalter"><input type="checkbox" id="cbUntot" ${S.untoterGegner?"checked":""}>
+      Gegner ist untot (Helghast und ihresgleichen)</label>`;
+    if(S.untoterGegner){
+      sw.innerHTML += `<div class="eff" style="padding-left:0">` +
+        (sommerswerdGefuehrt()
+          ? "Sommerswerd: der Gegner verliert doppelte Ausdauerpunkte."
+          : "Die Verdoppelung wirkt nur, wenn das Sommerswerd auch geführt wird – oben im Waffenkasten wählen.") +
+        `</div>`;
+    }
   }
   const ff = fertFeld();
   if(ff){
@@ -2888,6 +2987,10 @@ function kampfrunde(flucht, zahl){
     vEW = Math.max(0, vEW - ws);
     if(vorher !== vEW) hinweise.push("Waffenstärke " + ROEMISCH[ws] + ": −" + (vorher - vEW) + " Schaden");
   }
+  if(sommerswerdGefuehrt() && S.untoterGegner && !flucht && vFeind !== "T" && vFeind > 0){
+    vFeind = vFeind * 2;
+    hinweise.push("Sommerswerd gegen Untote: Schaden verdoppelt");
+  }
   const vs = fertStufe("schlag");
   if(vs && S.objektGegner && !flucht && vFeind !== "T" && vFeind > 0){
     vFeind = vFeind * (vs + 1);
@@ -2940,6 +3043,8 @@ function inKatalog(g){
 function hinzufuegen(g){
   const warn = document.getElementById("rucksackWarnung");
   warn.textContent = "";
+  const sk = sonderKennung(g);
+  if(sk){ g.sonder = sk; g.effekt = "keiner"; g.wert = 0; }
   if(!g.name){ warn.textContent = "Bitte einen Namen eintragen."; return; }
   if(g.liste === "rucksack"){
     const vorhanden = S.rucksack.find(x=>x.name.toLowerCase()===g.name.toLowerCase() &&
@@ -2999,7 +3104,7 @@ document.addEventListener("click", ev=>{
 
   if(t.dataset.held){
     S.charakter = t.dataset.held;
-    S.runden = []; S.modifikator = 0; S.objektGegner = false;
+    S.runden = []; S.modifikator = 0; S.objektGegner = false; S.untoterGegner = false;
     zeichne(); tabZeigen("blatt"); sichern(); return;
   }
   if(t.dataset.karte){ Karte.waehle(Number(t.dataset.karte), false); return; }
@@ -3127,7 +3232,7 @@ document.addEventListener("click", ev=>{
   if(t.id === "kampfReset"){
     kampfArchivieren("abgebrochen");
     S.feind = {name:"",ks:0,ap:0,apStart:0}; S.runden = []; S.modifikator = 0; S.immun = false;
-    S.objektGegner = false;
+    S.objektGegner = false; S.untoterGegner = false;
     document.getElementById("kampfErgebnis").textContent = "Gegnerwerte eintragen und Runde auslösen.";
     zeichne(); sichern(); return;
   }
@@ -3189,14 +3294,18 @@ document.addEventListener("change", ev=>{
     const i = Number(e.dataset.waffe);
     if(e.value === "__eigene") S.waffen[i].name = (prompt("Name der Waffe") || "").trim();
     else S.waffen[i].name = e.value;
-    if(S.waffen[i].name && !S.waffen[S.aktiveWaffe].name) S.aktiveWaffe = i;
+    if(S.waffen[i].name && S.aktiveWaffe !== "sw" && !S.waffen[S.aktiveWaffe].name) S.aktiveWaffe = i;
     zeichne(); sichern(); return;
   }
-  if(e.name === "aktiveWaffe"){ S.aktiveWaffe = Number(e.value); zeichne(); sichern(); return; }
+  if(e.name === "aktiveWaffe"){
+    S.aktiveWaffe = e.value === "sw" ? "sw" : Number(e.value);
+    zeichne(); sichern(); return;
+  }
   if(e.id === "cbTasche"){ S.provianttasche = e.checked; zeichneRest(); zeichneRucksack(); sichern(); return; }
   if(e.id === "cbStrahl"){ S.strahlAktiv = e.checked; zeichneKopf(); aktualisiereCQ(); sichern(); return; }
   if(e.id === "cbImmun"){ S.immun = e.checked; zeichneKopf(); aktualisiereCQ(); sichern(); return; }
   if(e.id === "cbObjekt"){ S.objektGegner = e.checked; zeichne(); sichern(); return; }
+  if(e.id === "cbUntot"){ S.untoterGegner = e.checked; zeichne(); sichern(); return; }
   if(e.id === "abschnittFeld"){ pfadMerken(); zeichnePfad(); sichern(); return; }
   if(e.dataset && e.dataset.bfert !== undefined){
     const ff = fertFeld(); if(!ff) return;
