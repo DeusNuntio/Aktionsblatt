@@ -1,5 +1,5 @@
-/* Aktionsblatt – Service Worker, Version 1.0 */
-const CACHE = "aktionsblatt-v1.0";
+/* Aktionsblatt – Service Worker, Version 1.1 */
+const CACHE = "aktionsblatt-v1.1";
 const DATEIEN = [
   "./",
   "./index.html",

@@ -16,12 +16,36 @@
 :root{
   --papier:#e7dfcb; --feld:#f6f1e3; --tinte:#22201a; --blass:#6b6355;
   --linie:#b7ad95; --rot:#a6321f; --siegel:#2f5061; --bonus:#5a4a7a;
+  --gold:#cda93a; --goldtief:#8a6a1e; --kartenfilter:none;
+  --zettel:#f2e7c9; --zettel2:#efe2c0; --zetteltinte:#2b2519;
+  --rollea:#e3d5ab; --rolleb:#f5ecd2; --stab1:#d9c89a; --stab2:#b4a173; --stab3:#9c8a5d; --stabrand:#7d6c44;
+  --faser:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22200%22%20height%3D%22200%22%3E%3Cfilter%20id%3D%22f%22%3E%3CfeTurbulence%20type%3D%22fractalNoise%22%20baseFrequency%3D%220.85%22%20numOctaves%3D%224%22%20stitchTiles%3D%22stitch%22%2F%3E%3CfeColorMatrix%20type%3D%22saturate%22%20values%3D%220%22%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%22200%22%20height%3D%22200%22%20filter%3D%22url%28%23f%29%22%20opacity%3D%220.055%22%2F%3E%3C%2Fsvg%3E");
   --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+  color-scheme:light;
+}
+:root[data-thema="dunkel"]{
+  --papier:#1c1a16; --feld:#262219; --tinte:#e4dac2; --blass:#9c917b;
+  --linie:#4b4438; --rot:#d86b52; --siegel:#7fa6c2; --bonus:#a690d8;
+  --gold:#b8963a; --goldtief:#6d541a; --kartenfilter:brightness(.86) saturate(.92);
+  --zettel:#3a3327; --zettel2:#352f24; --zetteltinte:#e8dec6;
+  --rollea:#2e2820; --rolleb:#3d3629; --stab1:#5a4f36; --stab2:#453c29; --stab3:#332c1e; --stabrand:#6b5d3e;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-thema="hell"]){
+    --papier:#1c1a16; --feld:#262219; --tinte:#e4dac2; --blass:#9c917b;
+    --linie:#4b4438; --rot:#d86b52; --siegel:#7fa6c2; --bonus:#a690d8;
+    --gold:#b8963a; --goldtief:#6d541a; --kartenfilter:brightness(.86) saturate(.92);
+    --zettel:#3a3327; --zettel2:#352f24; --zetteltinte:#e8dec6;
+    --rollea:#2e2820; --rolleb:#3d3629; --stab1:#5a4f36; --stab2:#453c29; --stab3:#332c1e; --stabrand:#6b5d3e;
+    color-scheme:dark;
+  }
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
-body{background:var(--papier);color:var(--tinte);font-family:var(--serif);font-size:16px;line-height:1.45;
-  padding:0 12px calc(84px + env(safe-area-inset-bottom));max-width:640px;margin:0 auto}
+body{background-color:var(--papier);background-image:var(--faser);color:var(--tinte);
+  font-family:var(--serif);font-size:16px;line-height:1.45;
+  padding:0 12px calc(112px + env(safe-area-inset-bottom));max-width:640px;margin:0 auto}
 h1,h2{font-weight:600;margin:0}
 .kopf{position:relative;margin:14px 0 18px;padding:16px 14px 14px}
 .kopf svg.rahmen{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
@@ -55,9 +79,13 @@ button.leise{border-color:var(--linie);color:var(--blass)}
 .helden button{font-size:12px;padding:3px 10px;border-color:var(--linie);color:var(--blass);border-radius:11px}
 .helden button[aria-pressed=true]{background:var(--tinte);color:var(--feld);border-color:var(--tinte)}
 .helden button.bonusheld[aria-pressed=true]{background:var(--bonus);border-color:var(--bonus)}
-section.box{border:1px solid var(--tinte);background:var(--feld);margin-bottom:14px}
-section.box>h2{font-size:12px;letter-spacing:.16em;padding:7px 10px;border-bottom:1px solid var(--tinte);
+section.box{border:1px solid var(--tinte);background-color:var(--feld);background-image:var(--faser);
+  margin-bottom:14px;position:relative}
+section.box>h2{font-size:12px;letter-spacing:.16em;padding:8px 10px 8px 24px;
+  border-bottom:1px solid var(--tinte);box-shadow:inset 0 -3px 0 -2px var(--linie);
   display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+section.box>h2::before{content:"";position:absolute;left:9px;top:12px;width:7px;height:7px;
+  transform:rotate(45deg);background:currentColor;opacity:.75}
 section.box>h2 span.hinweis{font-size:11px;letter-spacing:0;color:var(--blass);font-style:italic}
 section.box.speziell{border-color:var(--siegel)}
 section.box.speziell>h2{color:var(--siegel);border-bottom-color:var(--siegel)}
@@ -127,25 +155,26 @@ textarea{border:1px solid var(--linie);min-height:70px;background:var(--papier)}
 .warn{color:var(--rot);font-size:13px}
 /* Notizen als Papierfetzen und kleine Schriftrollen */
 .notiz{display:flex;gap:6px;align-items:flex-start;position:relative;
-  padding:16px 14px 16px 16px;margin:0 2px 12px;background:#f2e7c9;
+  padding:16px 14px 16px 16px;margin:0 2px 12px;background:var(--zettel);
   filter:drop-shadow(1px 2px 2px rgba(34,32,26,.28))}
 .notiz.fetzen{clip-path:polygon(
   0 6px, 6% 0, 14% 7px, 23% 1px, 33% 6px, 44% 0, 55% 7px, 66% 1px, 77% 6px, 88% 0, 96% 7px, 100% 2px,
   100% calc(100% - 6px), 94% 100%, 85% calc(100% - 7px), 74% 100%, 63% calc(100% - 6px),
   52% calc(100% - 1px), 41% calc(100% - 7px), 30% 100%, 19% calc(100% - 6px), 9% calc(100% - 1px),
   2% calc(100% - 7px), 0 calc(100% - 2px))}
-.notiz.fetzen:nth-of-type(odd){transform:rotate(-.6deg);background:#f2e7c9}
-.notiz.fetzen:nth-of-type(even){transform:rotate(.7deg);background:#efe2c0}
+.notiz.fetzen:nth-of-type(odd){transform:rotate(-.6deg);background:var(--zettel)}
+.notiz.fetzen:nth-of-type(even){transform:rotate(.7deg);background:var(--zettel2)}
 .notiz.rolle{margin:14px 6px 20px;padding:16px 14px;border-radius:2px;
-  background:linear-gradient(90deg,#e3d5ab 0,#f5ecd2 7%,#f5ecd2 93%,#e3d5ab 100%)}
+  background:linear-gradient(90deg,var(--rollea) 0,var(--rolleb) 7%,var(--rolleb) 93%,var(--rollea) 100%)}
 .notiz.rolle::before,.notiz.rolle::after{content:"";position:absolute;left:-6px;right:-6px;height:11px;
-  background:linear-gradient(#d9c89a,#b4a173 60%,#9c8a5d);
-  border:1px solid #7d6c44;border-radius:6px}
+  background:linear-gradient(var(--stab1),var(--stab2) 60%,var(--stab3));
+  border:1px solid var(--stabrand);border-radius:6px}
 .notiz.rolle::before{top:-7px}
 .notiz.rolle::after{bottom:-7px}
-.notiz .txt{flex:1;min-width:0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;color:#2b2519}
+.notiz .txt{flex:1;min-width:0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;color:var(--zetteltinte)}
 .notiz .werkzeug{display:flex;gap:4px;flex:none}
-.notiz .werkzeug button{padding:2px 7px;font-size:14px;line-height:1.2;background:rgba(255,255,255,.35)}
+.notiz .werkzeug button{padding:2px 7px;font-size:14px;line-height:1.2;
+  background:transparent;border-color:var(--linie);color:var(--zetteltinte)}
 
 /* Geldbörse */
 .boerse{display:flex;gap:10px;align-items:flex-start;padding:8px 0}
@@ -179,16 +208,138 @@ textarea{border:1px solid var(--linie);min-height:70px;background:var(--papier)}
   .blitz{animation:blitz .5s ease-out}
   @keyframes blitz{from{background:#f0d9c8}to{background:transparent}}
 }
+
+/* ---- Kopfleiste beim Scrollen ---- */
+.kopfleiste{position:fixed;top:0;left:0;right:0;z-index:25;display:none;
+  align-items:baseline;gap:10px;padding:7px 12px;font-size:13px;
+  background-color:var(--papier);background-image:var(--faser);
+  border-bottom:1px solid var(--tinte);box-shadow:0 2px 6px rgba(0,0,0,.18)}
+.kopfleiste.sichtbar{display:flex}
+.kopfleiste .kname{font-size:12px;letter-spacing:.1em;color:var(--blass);flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kopfleiste b{color:var(--rot);font-size:16px}
+.kopfleiste .kab{color:var(--blass);font-size:12px}
+
+/* ---- Ausdauerbalken ---- */
+.balken{margin:10px 0}
+.balken .bz{display:flex;justify-content:space-between;align-items:baseline;gap:8px;
+  font-size:12px;color:var(--blass);margin-bottom:2px}
+.balken .bz .bn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.balken .bz b{color:var(--tinte);font-size:14px}
+.bal{height:13px;border:1px solid var(--tinte);background:rgba(0,0,0,.07);margin-bottom:9px;
+  position:relative;overflow:hidden}
+.bal i{display:block;height:100%;background:var(--rot);transition:width .45s ease}
+.bal.feind i{background:var(--tinte)}
+.bal.wenig i{animation:puls 1.2s ease-in-out infinite}
+@keyframes puls{50%{opacity:.55}}
+.bal span{position:absolute;inset:0;font-size:10px;line-height:11px;text-align:center;color:var(--feld)}
+
+/* ---- Rucksackfächer ---- */
+.faecher{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin-bottom:12px}
+.fach{aspect-ratio:1;border:1px solid var(--linie);border-radius:3px;display:flex;
+  align-items:center;justify-content:center;position:relative;background:rgba(0,0,0,.04)}
+.fach.voll{border-color:var(--tinte);border-style:solid;background:rgba(0,0,0,.02)}
+.fach.leer{border-style:dashed;opacity:.65}
+.fach.leer::after{content:"";width:58%;height:6px;border:1px solid var(--linie);border-radius:5px;opacity:.7}
+.fach.sp{border-color:var(--siegel)}
+.fach svg{width:62%;height:62%;color:var(--tinte)}
+.fach.sp svg{color:var(--siegel)}
+.fach .fz{position:absolute;right:2px;bottom:1px;font-size:9px;color:var(--blass)}
+.fach.mahl svg{color:#7a5c2a}
+
+/* ---- Gegenstandssymbole in der Liste ---- */
+.gsym{flex:none;width:26px;height:26px;color:var(--tinte);opacity:.85}
+.gegenstand.sp .gsym{color:var(--siegel)}
+
+/* ---- Disziplinen-Siegel ---- */
+.siegelreihe{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.siegelreihe .sg{width:32px;height:32px;border:1px solid var(--linie);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;opacity:.3;background:rgba(0,0,0,.03)}
+.siegelreihe .sg.an{opacity:1;border-color:var(--tinte);background:rgba(0,0,0,.06)}
+.siegelreihe .sg svg{width:18px;height:18px;color:var(--tinte)}
+.dizsym{flex:none;width:22px;height:22px;color:var(--blass);opacity:.8}
+.dizsym.an{color:var(--tinte);opacity:1}
+
+/* ---- Münze für die Zufallszahl ---- */
+.muenzwurf{display:flex;justify-content:center;padding:6px 0 2px}
+.wurfmuenze{width:110px;height:110px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);font-size:52px;color:#4a360c;
+  background:radial-gradient(circle at 34% 28%,#f7e3a2,var(--gold) 62%,var(--goldtief));
+  border:3px solid var(--goldtief);
+  box-shadow:inset 0 3px 8px rgba(255,255,255,.55),inset 0 -4px 10px rgba(0,0,0,.35),0 3px 6px rgba(0,0,0,.3);
+  text-shadow:0 1px 0 rgba(255,255,255,.5),0 -1px 0 rgba(0,0,0,.25)}
+.wurfmuenze.leer{color:rgba(74,54,12,.45)}
+@media (prefers-reduced-motion:no-preference){
+  .wurfmuenze.rollt{animation:rollen .55s ease-out}
+  @keyframes rollen{0%{transform:rotateY(0) scale(1)}50%{transform:rotateY(540deg) scale(1.07)}
+                    100%{transform:rotateY(1080deg) scale(1)}}
+}
+.ergebnis .zz{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;
+  border-radius:50%;font-size:19px;color:#4a360c;vertical-align:middle;
+  background:radial-gradient(circle at 34% 28%,#f7e3a2,var(--gold) 62%,var(--goldtief));
+  border:2px solid var(--goldtief);margin-right:8px}
+
+/* ---- Abschnittspfad ---- */
+.pfad{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.pfad button{padding:2px 8px;font-size:12px;border-radius:10px;border-color:var(--linie);color:var(--blass)}
+.pfad button.jetzt{border-color:var(--rot);color:var(--rot)}
+
+/* ---- Einklappbares ---- */
+.klapp{margin-top:12px}
+.klapp>button.kopf{width:100%;text-align:left;border-color:var(--linie);color:var(--blass);font-size:13px}
+.klapp>.rumpf{display:none;margin-top:8px}
+.klapp.offen>.rumpf{display:block}
+.kartefeld svg{filter:var(--kartenfilter)}
+.themawahl{display:flex;gap:6px;flex-wrap:wrap}
+.themawahl button[aria-pressed=true]{background:var(--tinte);color:var(--feld)}
 </style>
 </head>
 <body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs>
+ <style>#sym-trank,#sym-kraut,#sym-mahlzeit,#sym-schluessel,#sym-waffe,#sym-ruestung,#sym-schild,#sym-schrift,#sym-karte,#sym-edelstein,#sym-licht,#sym-seil,#sym-schmuck,#sym-sonstiges,#dz-tarnung,#dz-jagd,#dz-sinn,#dz-spuren,#dz-heilung,#dz-waffe,#dz-sperre,#dz-strahl,#dz-tier,#dz-materie{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}</style>
+ <g id="sym-trank"><path d="M10 2h4v4l4 8v6a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-6l4-8z"/><path d="M6.6 14h10.8"/></g>
+ <g id="sym-kraut"><path d="M12 21V9"/><path d="M12 12c-5 0-7-3-7-7 5 0 7 3 7 7z"/><path d="M12 15c5 0 7-3 7-7-5 0-7 3-7 7z"/></g>
+ <g id="sym-mahlzeit"><path d="M3 13c0-4 4-7 9-7s9 3 9 7v4H3z"/><path d="M6 13c0-2 2-3 3-3M12 13c0-2 2-3 3-3"/></g>
+ <g id="sym-schluessel"><circle cx="7" cy="8" r="4"/><path d="M10 11l9 9M16 17l2.5-2.5M19 20l2.5-2.5"/></g>
+ <g id="sym-waffe"><path d="M13 3l6 6-9 9-3 3-3-3 3-3 9-9z"/><path d="M6 15l3 3"/></g>
+ <g id="sym-ruestung"><path d="M4 13a8 8 0 0 1 16 0v5h-4v-4H8v4H4z"/><path d="M8 18h8"/></g>
+ <g id="sym-schild"><path d="M12 2l8 3v7c0 5-4 8-8 10-4-2-8-5-8-10V5z"/></g>
+ <g id="sym-schrift"><path d="M6 3h12a2 2 0 0 1 0 4h-2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M7 9h6M7 13h6"/></g>
+ <g id="sym-karte"><path d="M2 5l7-2 6 3 7-2v15l-7 2-6-3-7 2z"/><path d="M9 3v16M15 6v16"/></g>
+ <g id="sym-edelstein"><path d="M7 3h10l4 6-9 12L3 9z"/><path d="M3 9h18M9 3l-2 6 5 12 5-12-2-6"/></g>
+ <g id="sym-licht"><path d="M10 21h4M11 21v-7M13 21v-7"/><path d="M12 2c3 3 4 5 4 7a4 4 0 1 1-8 0c0-2 1-4 4-7z"/></g>
+ <g id="sym-seil"><path d="M5 5c6 0 6 4 0 4s-6 4 0 4 6 4 0 4"/><path d="M19 5c-6 0-6 4 0 4s6 4 0 4-6 4 0 4"/></g>
+ <g id="sym-schmuck"><circle cx="12" cy="15" r="5"/><path d="M9 8l3-5 3 5"/></g>
+ <g id="sym-sonstiges"><path d="M8 7h8l3 8a5 5 0 0 1-5 6h-4a5 5 0 0 1-5-6z"/><path d="M9 7a3 3 0 0 1 6 0"/></g>
+
+ <g id="dz-tarnung"><path d="M12 2c4 0 7 3 7 7v12H5V9c0-4 3-7 7-7z"/><path d="M9 10c2-1 4-1 6 0"/></g>
+ <g id="dz-jagd"><path d="M5 3c9 1 15 7 16 16"/><path d="M5 3l16 16"/><path d="M5 3v6M5 3h6"/></g>
+ <g id="dz-sinn"><path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="3"/></g>
+ <g id="dz-spuren"><ellipse cx="10" cy="14" rx="4" ry="6"/><circle cx="16" cy="7" r="2"/><circle cx="19" cy="12" r="1.8"/></g>
+ <g id="dz-heilung"><path d="M12 21V9"/><path d="M12 12c-5 0-7-3-7-7 5 0 7 3 7 7z"/><path d="M12 21c0-4 3-7 7-7"/></g>
+ <g id="dz-waffe"><path d="M4 4l11 11M20 4L9 15"/><path d="M4 20l5-5M20 20l-5-5"/></g>
+ <g id="dz-sperre"><path d="M12 2l8 3v7c0 5-4 8-8 10-4-2-8-5-8-10V5z"/><path d="M12 8a3 3 0 1 1-3 3c0-2 3-2 3 0"/></g>
+ <g id="dz-strahl"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></g>
+ <g id="dz-tier"><ellipse cx="12" cy="16" rx="5" ry="4"/><circle cx="6.5" cy="10" r="2"/><circle cx="17.5" cy="10" r="2"/><circle cx="9.5" cy="6" r="2"/><circle cx="14.5" cy="6" r="2"/></g>
+ <g id="dz-materie"><path d="M12 3l7 4v10l-7 4-7-4V7z"/><path d="M12 9a3 3 0 1 1-3 3"/></g>
+</defs>
+</svg>
+
+<div class="kopfleiste" id="kopfLeiste">
+  <span class="kname" id="klName">Einsamer Wolf</span>
+  <span>KS <b id="klKS">0</b></span>
+  <span>AP <b id="klAP">0</b><span class="kab" id="klMax">/0</span></span>
+  <span class="kab" id="klAbschnitt">§ 1</span>
+</div>
 
 <div class="kopf">
   <svg class="rahmen" viewBox="0 0 400 260" preserveAspectRatio="none" aria-hidden="true">
     <filter id="riss"><feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="3" seed="7"/>
       <feDisplacementMap in="SourceGraphic" scale="7" xChannelSelector="R" yChannelSelector="G"/></filter>
-    <rect x="4" y="4" width="392" height="252" fill="none" stroke="#22201a" stroke-width="2.2" filter="url(#riss)"/>
-    <rect x="10" y="10" width="380" height="240" fill="none" stroke="#22201a" stroke-width="0.8" filter="url(#riss)"/>
+    <rect x="4" y="4" width="392" height="252" fill="none" stroke="currentColor" stroke-width="2.2" filter="url(#riss)"/>
+    <rect x="10" y="10" width="380" height="240" fill="none" stroke="currentColor" stroke-width="0.8" filter="url(#riss)"/>
   </svg>
   <h1 id="blattTitel">AKTIONSBLATT</h1>
   <div class="buch" id="buchAnzeige">Buch 1</div>
@@ -242,6 +393,7 @@ textarea{border:1px solid var(--linie);min-height:70px;background:var(--papier)}
             <button class="klein" data-abschnitt="1">+</button>
           </div>
         </div>
+        <div class="pfad" id="pfadListe"></div>
         <div class="zeile">
           <div class="gname"><div class="t">Mahlzeiten</div>
             <div class="s" id="mahlHinweis">Ohne Mahlzeit −3 AP (entfällt mit Jagd)</div></div>
@@ -286,6 +438,7 @@ textarea{border:1px solid var(--linie);min-height:70px;background:var(--papier)}
     <section class="box">
       <h2>KAI-DISZIPLINEN <span class="hinweis" id="dizZaehler">5 Fertigkeiten</span></h2>
       <div class="inhalt">
+        <div class="siegelreihe" id="siegelReihe"></div>
         <div id="dizListe"></div>
         <div class="knopfreihe" style="justify-content:flex-start">
           <button class="klein" id="dizPlus">+ Disziplin</button>
@@ -313,7 +466,10 @@ textarea{border:1px solid var(--linie);min-height:70px;background:var(--papier)}
   <div id="rucksackWolf">
     <section class="box">
       <h2>RUCKSACK <span class="hinweis" id="rucksackZaehler">0 von 8</span></h2>
-      <div class="inhalt" id="rucksackListe"></div>
+      <div class="inhalt">
+        <div class="faecher" id="faecherRaster"></div>
+        <div id="rucksackListe"></div>
+      </div>
     </section>
 
     <section class="box speziell">
@@ -331,10 +487,10 @@ textarea{border:1px solid var(--linie);min-height:70px;background:var(--papier)}
         <div class="hinzu">
           <div style="flex:2 1 160px"><label class="klein" for="neuName">Name</label>
             <input id="neuName" type="text" placeholder="z. B. Heiltrank"></div>
-          <div><label class="klein" for="neuTyp">Art</label>
+          <div style="flex:1 1 140px"><label class="klein" for="neuTyp">Art</label>
             <select id="neuTyp">
               <option value="rucksack">Rucksack</option>
-              <option value="speziell">Spezieller Gegenstand</option>
+              <option value="speziell">Speziell</option>
             </select></div>
         </div>
         <div class="hinzu" style="border:0;padding-top:0">
@@ -383,17 +539,21 @@ textarea{border:1px solid var(--linie);min-height:70px;background:var(--papier)}
           <div id="cqRechnung" style="font-size:12px;color:var(--blass)"></div></div>
         <div class="v" id="cqWert">0</div>
       </div>
+      <div class="balken" id="kampfBalken"></div>
       <div class="ergebnis" id="kampfErgebnis">Gegnerwerte eintragen und Runde auslösen.</div>
       <div class="knopfreihe" style="justify-content:flex-start">
         <button class="stark" id="rundeBtn">Runde – Zahl ziehen</button>
         <button class="klein" id="fluchtBtn">Fliehen</button>
+        <button class="klein leise" id="rundeZurueck" style="display:none">Runde zurück</button>
         <button class="klein leise" id="kampfReset">Kampf beenden</button>
       </div>
-      <div style="margin-top:12px">
-        <label class="klein">Oder Zufallszahl selbst antippen – die Runde wird damit gerechnet</label>
-        <div class="zzt" id="zzKampf"></div>
-        <label class="schalter" style="margin-top:6px">
-          <input type="checkbox" id="cbTippFlucht"> Angetippte Zahl als Fluchtrunde werten</label>
+      <div class="klapp" id="zzKlapp">
+        <button class="kopf" id="zzKlappKnopf">▸ Zufallszahl selbst antippen</button>
+        <div class="rumpf">
+          <div class="zzt" id="zzKampf"></div>
+          <label class="schalter" style="margin-top:6px">
+            <input type="checkbox" id="cbTippFlucht"> Angetippte Zahl als Fluchtrunde werten</label>
+        </div>
       </div>
     </div>
   </section>
@@ -444,7 +604,7 @@ textarea{border:1px solid var(--linie);min-height:70px;background:var(--papier)}
   <section class="box">
     <h2>ZUFALLSZAHL</h2>
     <div class="inhalt" style="text-align:center">
-      <div class="zahl" id="zufallGross" style="font-size:64px;color:var(--rot);line-height:1">–</div>
+      <div class="muenzwurf"><div class="wurfmuenze leer" id="zufallGross">?</div></div>
       <div class="knopfreihe"><button class="stark" id="zufallBtn">Zahl ziehen</button></div>
       <div class="fuss">0 gilt als 0 – wie im Buch.</div>
     </div>
@@ -495,6 +655,19 @@ textarea{border:1px solid var(--linie);min-height:70px;background:var(--papier)}
         <button class="klein leise" id="apVoll2">Ausdauer auf Grundwert setzen</button>
       </div>
       <div class="fuss" id="erstellHinweis" style="text-align:left"></div>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2>DARSTELLUNG</h2>
+    <div class="inhalt">
+      <label class="klein">Papierfarbe</label>
+      <div class="themawahl" id="themaWahl">
+        <button class="klein" data-thema="auto">Wie das Gerät</button>
+        <button class="klein" data-thema="hell">Helles Pergament</button>
+        <button class="klein" data-thema="dunkel">Dunkles Pergament</button>
+      </div>
+      <div class="fuss" style="text-align:left">Dunkles Pergament schont die Augen beim Lesen am Abend.</div>
     </div>
   </section>
 
@@ -569,6 +742,28 @@ const DISZIPLINEN = [
   {id:"materie",  name:"Geist über Materie", eff:"Kleine Objekte durch Konzentration bewegen."}
 ];
 
+/* Gegenstandssymbole – abgeleitet aus Name und Effekt */
+function symbolFuer(g){
+  const n = String(g.name || "").toLowerCase();
+  if(g.effekt === "mahlzeit" || /mahlzeit|proviant|brot|ration/.test(n)) return "mahlzeit";
+  if(/schlüssel|schluessel|schlüsselbund/.test(n)) return "schluessel";
+  if(/trank|elixier|tinktur|fläschchen|flasche|feldflasche|kourshah|öl$|-öl|weihwasser/.test(n)) return "trank";
+  if(/kraut|laumspur|oede|öde|galgen|grabkraut|calacena|alether|kissen/.test(n)) return "kraut";
+  if(/schild/.test(n)) return "schild";
+  if(/helm|kettenhemd|weste|rüstung|ruestung|panzer|schärpe|schaerpe/.test(n) || g.effekt === "apmax") return "ruestung";
+  if(/schwert|dolch|axt|speer|hammer|streitkolben|kolben|stab|klinge|peitsche|blasrohr|pfeil|spitzhacke|schaufel/.test(n)) return "waffe";
+  if(/karte/.test(n)) return "karte";
+  if(/schriftrolle|rolle|nachricht|papier|pass|schein|urkunde|brief|fahrschein/.test(n)) return "schrift";
+  if(/edelstein|diamant|kristall|juwel|perle|prisma|stein|würfel|wuerfel|scheibe|kugel|figur/.test(n)) return "edelstein";
+  if(/fackel|laterne|kerze|zunder|leucht|feuer/.test(n)) return "licht";
+  if(/seil|kette|tau/.test(n)) return "seil";
+  if(/ring|anhänger|anhaenger|medaillon|amulett|armreif|siegel|kamm|pfeife|sanduhr/.test(n)) return "schmuck";
+  return "sonstiges";
+}
+function symbolSvg(id, klasse){
+  return `<svg class="${klasse}" viewBox="0 0 24 24" aria-hidden="true"><use href="#${id}"/></svg>`;
+}
+
 const WAFFEN = ["Dolch","Speer","Streitkolben","Kurzschwert","Kriegshammer","Schwert","Axt","Kampfstab","Breitschwert"];
 
 const REIHEN = [
@@ -579,8 +774,8 @@ const REIHEN = [
 ];
 
 const BUCHTITEL = {
-  1:"Flight from the Dark", 2:"Feuer über den Wassern", 3:"The Caverns of Kalte",
-  4:"The Chasm of Doom", 5:"Shadow on the Sand"
+  1:"Flucht aus dem Dunkel", 2:"Feuer über den Wassern", 3:"Die Grotten von Kulde",
+  4:"Die Schlucht des Schicksals", 5:"Die Schatten der Wüste"
 };
 
 /* Zahl der Kai-Disziplinen laut den Aktionsblättern des Mantikore-Verlags:
@@ -1634,6 +1829,21 @@ function spalte(cq){
 }
 function zeile(z){ return z === 0 ? 9 : z - 1; }
 let letzteZZ = -1;
+let wurfTimer = null;
+/* Die Münze läuft kurz durch die Ziffern und rastet dann ein. */
+function zahlAnzeigen(ziel){
+  const el = document.getElementById("zufallGross");
+  if(!el) return;
+  el.classList.remove("leer");
+  clearInterval(wurfTimer);
+  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches){ el.textContent = ziel; return; }
+  el.classList.remove("rollt"); void el.offsetWidth; el.classList.add("rollt");
+  let n = 0;
+  wurfTimer = setInterval(()=>{
+    el.textContent = Math.floor(Math.random() * 10);
+    if(++n >= 9){ clearInterval(wurfTimer); el.textContent = ziel; }
+  }, 55);
+}
 function markiereZZ(i){
   document.querySelectorAll(".zzt button").forEach(b=>b.classList.remove("gezogen"));
   if(i < 0) return;
@@ -1658,14 +1868,14 @@ const STANDARD = {
   rucksack:[], speziell:[], katalog:[], gegnerKatalog:[], archiv:[],
   mahlzeiten:0, gold:0, abschnitt:1, notizen:[], provianttasche:false, zuletzt:"",
   feind:{name:"",ks:0,ap:0,apStart:0}, strahlAktiv:true, immun:false, modifikator:0, objektGegner:false,
-  runden:[],
-  charakter:"wolf", bonusse:{}
+  runden:[], pfad:[],
+  charakter:"wolf", bonusse:{}, thema:"auto"
 };
 
 let S = JSON.parse(JSON.stringify(STANDARD));
 const SCHLUESSEL = "aktionsblatt:v1";
-const VERSION = "1.0";
-const VERSIONSDATUM = "24.09.2026";
+const VERSION = "1.1";
+const VERSIONSDATUM = "26.09.2026";
 
 /* Speicher: in der Claude-App window.storage, als installierte App der Gerätespeicher */
 const Speicher = {
@@ -1717,6 +1927,8 @@ function angleichen(){
   });
   if(!S.bonusse || typeof S.bonusse !== "object") S.bonusse = {};
   S.objektGegner = !!S.objektGegner;
+  if(!Array.isArray(S.pfad)) S.pfad = [];
+  if(["auto","hell","dunkel"].indexOf(S.thema) < 0) S.thema = "auto";
   /* Rhygars Fähigkeiten sind seit Version 1.0 Kennungen aus FERTIGKEITEN, nicht mehr freier Text */
   Object.keys(BONUS).forEach(b=>BONUS[b].forEach(def=>{
     const d = S.bonusse[def.id]; if(!d || !d.felder) return;
@@ -1757,7 +1969,14 @@ function sichern(){
     catch(e){ status("Speichern nicht möglich – Spielstand über „Spielstand kopieren“ sichern."); }
   },350);
 }
-function status(t){ const e = document.getElementById("speicherStatus"); if(e) e.textContent = t; }
+let statusBis = 0;
+function status(t, wichtig){
+  const e = document.getElementById("speicherStatus");
+  if(!e) return;
+  if(!wichtig && Date.now() < statusBis) return;
+  e.textContent = t;
+  if(wichtig) statusBis = Date.now() + 3200;
+}
 
 /* ---------------- Aktiver Charakter ---------------- */
 
@@ -1914,12 +2133,92 @@ function zeichneKopf(){
     "Buch " + S.buchNr + (BUCHTITEL[S.buchNr] ? " – " + BUCHTITEL[S.buchNr] : "") +
     " · Abschnitt " + S.abschnitt;
   document.getElementById("versionZeile").textContent = "Version " + VERSION;
+  zeichneKopfleiste();
+  zeichneBalken();
   document.getElementById("spalteHeld").textContent = heldName();
   document.getElementById("kampfHeld").textContent = bon ? "Kampf für " + bon.def.name : "";
   const eh = document.getElementById("erstellHinweis");
   if(eh) eh.textContent = bon
     ? "Die Felder oben gehören gerade zu " + bon.def.name + ". Für den Einsamen Wolf oben umschalten."
     : "";
+}
+
+function zeichneKopfleiste(){
+  const l = document.getElementById("kopfLeiste");
+  if(!l) return;
+  document.getElementById("klName").textContent = heldName();
+  document.getElementById("klKS").textContent = ksGesamt();
+  document.getElementById("klAP").textContent = apJetztWert();
+  document.getElementById("klMax").textContent = "/" + apMaxGesamt();
+  document.getElementById("klAbschnitt").textContent = "§ " + S.abschnitt;
+}
+
+/* Ausdauerbalken beider Seiten */
+function zeichneBalken(){
+  const w = document.getElementById("kampfBalken");
+  if(!w) return;
+  const max = apMaxGesamt(), jetzt = apJetztWert();
+  const fmax = Number(S.feind.apStart || S.feind.ap || 0), fjetzt = Math.max(0, Number(S.feind.ap || 0));
+  const teil = (a,b)=> b > 0 ? Math.max(0, Math.min(100, a / b * 100)) : 0;
+  let h = `<div class="bz"><span class="bn">${esc(heldName())}</span><span><b>${jetzt}</b> von ${max}</span></div>
+           <div class="bal${teil(jetzt,max) <= 25 ? " wenig" : ""}"><i style="width:${teil(jetzt,max).toFixed(1)}%"></i></div>`;
+  if(fmax > 0 || S.feind.name){
+    h += `<div class="bz"><span class="bn">${esc(S.feind.name || "Gegner")}</span><span><b>${fjetzt}</b> von ${fmax}</span></div>
+          <div class="bal feind"><i style="width:${teil(fjetzt,fmax).toFixed(1)}%"></i></div>`;
+  }
+  w.innerHTML = h;
+}
+
+/* Acht Rucksackfächer */
+function zeichneFaecher(){
+  const w = document.getElementById("faecherRaster");
+  if(!w) return;
+  const fach = [];
+  S.rucksack.forEach((g,i)=>{ for(let k=0;k<plaetze(g);k++) fach.push({g:g, i:i}); });
+  for(let k=0;k<mahlzeitenBelegen();k++) fach.push({mahl:true});
+  let h = "";
+  for(let i=0;i<8;i++){
+    const f = fach[i];
+    if(!f){ h += '<div class="fach leer"></div>'; continue; }
+    if(f.mahl){ h += `<div class="fach voll mahl" title="Mahlzeit">${symbolSvg("sym-mahlzeit","")}</div>`; continue; }
+    h += `<div class="fach voll" data-fach="${f.i}" title="${esc(f.g.name)}">${symbolSvg("sym-" + symbolFuer(f.g), "")}</div>`;
+  }
+  if(fach.length > 8) h += '<div class="fach leer" style="grid-column:1/-1;aspect-ratio:auto;padding:4px;font-size:12px">überzählig</div>';
+  w.innerHTML = h;
+}
+
+/* Siegelreihe der Kai-Disziplinen */
+function zeichneSiegel(){
+  const w = document.getElementById("siegelReihe");
+  if(!w) return;
+  w.innerHTML = DISZIPLINEN.map(d=>
+    `<span class="sg${S.disziplinen.includes(d.id) ? " an" : ""}" title="${esc(d.name)}">${symbolSvg("dz-" + d.id, "")}</span>`
+  ).join("");
+}
+
+/* Abschnittspfad */
+function pfadMerken(){
+  if(!Array.isArray(S.pfad)) S.pfad = [];
+  const letzt = S.pfad[S.pfad.length - 1];
+  if(letzt && letzt.n === S.abschnitt) return;
+  S.pfad.push({n:S.abschnitt, t:Date.now()});
+  if(S.pfad.length > 80) S.pfad = S.pfad.slice(-80);
+}
+function zeichnePfad(){
+  const w = document.getElementById("pfadListe");
+  if(!w) return;
+  const liste = S.pfad.slice(-14);
+  if(!liste.length){ w.innerHTML = '<span class="leer">Der Weg wird ab dem nächsten Abschnittswechsel festgehalten.</span>'; return; }
+  w.innerHTML = liste.map((x,i)=>
+    `<button data-pfad="${x.n}"${x.n === S.abschnitt && i === liste.length-1 ? ' class="jetzt"' : ""}>§${x.n}</button>`
+  ).join("");
+}
+
+function themaAnwenden(){
+  if(S.thema === "auto") delete document.documentElement.dataset.thema;
+  else document.documentElement.dataset.thema = S.thema;
+  document.querySelectorAll("#themaWahl button").forEach(b=>
+    b.setAttribute("aria-pressed", b.dataset.thema === S.thema));
 }
 
 function zeichneDisziplinen(){
@@ -1941,7 +2240,12 @@ function zeichneDisziplinen(){
       if(genutzt.includes(d.id) && d.id !== gewaehlt) return;
       opt += `<option value="${d.id}"${d.id===gewaehlt?" selected":""}>${d.name}</option>`;
     });
-    z.innerHTML = `<span class="nr">${i+1}</span><select data-diz="${i}">${opt}</select>` +
+    z.innerHTML = `<span class="nr">${i+1}</span>` +
+      (gewaehlt ? symbolSvg("dz-" + gewaehlt, "dizsym an")
+                : '<span class="dizsym" style="display:inline-block;position:relative">' +
+                  '<span style="position:absolute;left:8px;top:8px;width:6px;height:6px;' +
+                  'border:1px solid currentColor;transform:rotate(45deg);opacity:.5"></span></span>') +
+      `<select data-diz="${i}">${opt}</select>` +
       (i >= soll ? `<button class="klein leise" data-dizweg="${i}" aria-label="Platz entfernen">×</button>` : "");
     w.appendChild(z);
     if(gewaehlt){
@@ -2093,7 +2397,8 @@ function gegenstandZeile(g,i,liste){
   if(je > 1) zusatz.push(n + (n === 1 ? " Portion" : " Portionen") +
                          " · " + plaetze(g) + (plaetze(g) === 1 ? " Platz" : " Plätze"));
   else if(n > 1) zusatz.push(n + "×");
-  el.innerHTML = `<div class="gname"><div class="t">${esc(g.name)}</div>
+  el.innerHTML = symbolSvg("sym-" + symbolFuer(g), "gsym") +
+    `<div class="gname"><div class="t">${esc(g.name)}</div>
       <div class="s">${zusatz.join(" · ")}</div></div>`;
   if(g.effekt === "ap" || g.effekt === "mahlzeit"){
     const b = document.createElement("button");
@@ -2112,6 +2417,7 @@ function gegenstandZeile(g,i,liste){
 function zeichneRucksack(){
   const w = document.getElementById("rucksackListe");
   document.getElementById("rucksackZaehler").textContent = rucksackBelegt() + " von 8";
+  zeichneFaecher();
   w.innerHTML = "";
   if(!S.rucksack.length) w.innerHTML = '<div class="leer">Der Rucksack ist leer.</div>';
   S.rucksack.forEach((g,i)=> w.appendChild(gegenstandZeile(g,i,"rucksack")));
@@ -2169,6 +2475,7 @@ function zeichneRest(){
                       : "belegen " + mahlzeitenBelegen() + " von 8 Plätzen");
   const ct = document.getElementById("cbTasche");
   if(document.activeElement !== ct) ct.checked = S.provianttasche;
+  zeichnePfad();
   zeichneNotizen();
 }
 
@@ -2285,12 +2592,15 @@ function zeichneKampf(){
 
   aktualisiereCQ();
   zeichneGegnerWahl();
+  zeichneBalken();
+  const rz = document.getElementById("rundeZurueck");
+  if(rz) rz.style.display = letzterZustand ? "inline-block" : "none";
 
   const tb = document.getElementById("protokollBody");
   tb.innerHTML = S.runden.map((r,i)=>
     `<tr><td>${i+1}</td><td>${r.zz}</td>
-      <td class="z">${r.ew==="T"?'<span class="tot">Tod</span>':"−"+r.ew}</td>
-      <td class="z">${r.f==="T"?'<span class="tot">Tod</span>':"−"+r.f}</td></tr>`).join("");
+      <td class="z">${r.ew==="T"?'<span class="tot">Tod</span>':(r.ew?"−"+r.ew:"–")}</td>
+      <td class="z">${r.f==="T"?'<span class="tot">Tod</span>':(r.f?"−"+r.f:"–")}</td></tr>`).join("");
   document.getElementById("protokollLeer").style.display = S.runden.length ? "none" : "block";
   document.getElementById("kampfMeta").textContent =
     S.runden.length ? (S.feind.name || "Gegner") + " · Abschnitt " + S.abschnitt : "";
@@ -2307,7 +2617,8 @@ function zeichneArchiv(){
     el.className = "archiv";
     el.dataset.archiv = k.id;
     const held = k.held || "Einsamer Wolf";
-    const runden = k.runden.map((r,i)=>`${i+1}. Zahl ${r.zz}: ${esc(held)} −${r.ew==="T"?"Tod":r.ew}, Feind −${r.f==="T"?"Tod":r.f}`).join("<br>");
+    const runden = k.runden.map((r,i)=>`${i+1}. Zahl ${r.zz}: ${esc(held)} ${r.ew==="T"?"Tod":(r.ew?"−"+r.ew:"unverletzt")}, ` +
+        `Feind ${r.f==="T"?"Tod":(r.f?"−"+r.f:"ohne Verlust")}`).join("<br>");
     el.innerHTML =
       `<div class="kopfz"><b>${esc(k.name||"Gegner")}</b><span class="meta">${k.ergebnis}</span></div>
        <div class="meta">${esc(held)} · Buch ${k.buch} · Abschnitt ${k.abschnitt} · KS ${k.ks} · AP ${k.apStart} · ${k.runden.length} Runden · ${k.datum}</div>
@@ -2500,15 +2811,33 @@ function zeichneKarte(){
 
 function zeichne(){
   disziplinenAngleichen();
+  themaAnwenden();
   zeichneUeber(); zeichneInstall();
   zeichneHelden(); zeichneKopf(); zeichneBonusblatt();
-  zeichneDisziplinen(); zeichneWaffen(); zeichneRucksack();
+  zeichneSiegel(); zeichneDisziplinen(); zeichneWaffen(); zeichneRucksack();
   zeichneRest(); zeichneEinstellungen(); zeichneKampf();
 }
 
 /* ---------------- Aktionen ---------------- */
 
 function apAendern(delta){ apSetzen(apJetztWert() + delta); zeichneKopf(); sichern(); }
+
+/* Ein Schritt zurück: der Stand vor der letzten Runde */
+let letzterZustand = null;
+function zustandMerken(){
+  letzterZustand = JSON.stringify({
+    apJetzt:S.apJetzt, bonusse:S.bonusse, feind:S.feind,
+    runden:S.runden, archiv:S.archiv, gegnerKatalog:S.gegnerKatalog
+  });
+}
+function zustandZurueck(){
+  if(!letzterZustand) return false;
+  const z = JSON.parse(letzterZustand);
+  S.apJetzt = z.apJetzt; S.bonusse = z.bonusse; S.feind = z.feind;
+  S.runden = z.runden; S.archiv = z.archiv; S.gegnerKatalog = z.gegnerKatalog;
+  letzterZustand = null;
+  return true;
+}
 
 function gegnerMerken(){
   if(!S.feind.name) return;
@@ -2542,6 +2871,7 @@ function kampfrunde(flucht, zahl){
       "Für " + heldName() + " sind oben noch keine Ausdauerpunkte eingetragen.";
     return;
   }
+  zustandMerken();
   if(!S.runden.length){ S.feind.apStart = Number(S.feind.ap||0); gegnerMerken(); }
 
   const zz = (zahl === undefined) ? zieheZufallszahl() : Number(zahl);
@@ -2649,6 +2979,15 @@ function tabZeigen(name){
 /* ---------------- Ereignisse ---------------- */
 
 document.addEventListener("click", ev=>{
+  const fach = ev.target.closest(".fach[data-fach]");
+  if(fach){
+    const ziel = document.querySelectorAll("#rucksackListe .gegenstand")[Number(fach.dataset.fach)];
+    if(ziel){
+      ziel.scrollIntoView({block:"center", behavior:"smooth"});
+      ziel.classList.remove("blitz"); void ziel.offsetWidth; ziel.classList.add("blitz");
+    }
+    return;
+  }
   const t = ev.target.closest("button");
   if(!t){
     const a = ev.target.closest(".archiv");
@@ -2667,6 +3006,26 @@ document.addEventListener("click", ev=>{
   if(t.dataset.zoom){ Karte.zoom(Number(t.dataset.zoom) > 0 ? 1.35 : 1/1.35); return; }
   if(t.id === "karteEinpassen"){ Karte.einpassen("ganz"); return; }
 
+  if(t.dataset.thema){ S.thema = t.dataset.thema; themaAnwenden(); sichern(); return; }
+  if(t.id === "zzKlappKnopf"){
+    const k = document.getElementById("zzKlapp");
+    k.classList.toggle("offen");
+    t.textContent = (k.classList.contains("offen") ? "▾ " : "▸ ") + "Zufallszahl selbst antippen";
+    return;
+  }
+  if(t.id === "rundeZurueck"){
+    if(zustandZurueck()){
+      document.getElementById("kampfErgebnis").textContent = "Die letzte Runde wurde zurückgenommen.";
+      zeichne(); sichern(); status("Letzte Runde zurückgenommen.", true);
+    }
+    return;
+  }
+  if(t.dataset.pfad){
+    S.abschnitt = Math.max(1, Number(t.dataset.pfad));
+    pfadMerken(); zeichne(); sichern();
+    status("Zurück zu Abschnitt " + S.abschnitt + ".", true);
+    return;
+  }
   if(t.dataset.ap){ apAendern(Number(t.dataset.ap)); return; }
   if(t.id === "apVoll" || t.id === "apVoll2"){ apSetzen(apMaxGesamt()); zeichneKopf(); sichern(); return; }
 
@@ -2680,13 +3039,14 @@ document.addEventListener("click", ev=>{
   if(t.dataset.abschnitt){
     const d = Number(t.dataset.abschnitt);
     S.abschnitt = Math.max(1, S.abschnitt + d);
+    pfadMerken();
     if(d > 0 && hatDisziplin("heilung")) apSetzen(apJetztWert() + 1);
     zeichneKopf(); zeichneRest(); zeichneKampf(); zeichneUeber(); sichern(); return;
   }
   if(t.dataset.mahl){
     const d = Number(t.dataset.mahl);
     if(d > 0 && !S.provianttasche && rucksackBelegt() + d > 8){
-      status("Kein Platz im Rucksack – Mahlzeiten zählen als Gegenstände.");
+      status("Kein Platz im Rucksack – Mahlzeiten zählen als Gegenstände.", true);
       return;
     }
     S.mahlzeiten = Math.max(0, S.mahlzeiten + d);
@@ -2695,13 +3055,13 @@ document.addEventListener("click", ev=>{
   if(t.dataset.gold){ S.gold = Math.max(0, Math.min(50, S.gold + Number(t.dataset.gold))); zeichneRest(); sichern(); return; }
 
   if(t.id === "essen"){
-    if(S.mahlzeiten > 0){ S.mahlzeiten--; status("Mahlzeit eingenommen."); }
-    else status("Keine Mahlzeit vorrätig.");
+    if(S.mahlzeiten > 0){ S.mahlzeiten--; status("Mahlzeit eingenommen.", true); }
+    else status("Keine Mahlzeit vorrätig.", true);
     zeichneRest(); zeichneRucksack(); sichern(); return;
   }
   if(t.id === "nichtEssen"){
-    if(hatDisziplin("jagd")) status("Jagd: keine Mahlzeit nötig.");
-    else { apAendern(-3); status("Keine Mahlzeit: −3 AP."); }
+    if(hatDisziplin("jagd")) status("Jagd: keine Mahlzeit nötig.", true);
+    else { apAendern(-3); status("Keine Mahlzeit: −3 AP.", true); }
     return;
   }
 
@@ -2777,9 +3137,9 @@ document.addEventListener("click", ev=>{
     return;
   }
 
-  if(t.id === "zufallBtn"){ document.getElementById("zufallGross").textContent = zieheZufallszahl(); return; }
+  if(t.id === "zufallBtn"){ zahlAnzeigen(zieheZufallszahl()); return; }
   if(t.dataset.zz !== undefined){
-    document.getElementById("zufallGross").textContent = t.dataset.zz;
+    zahlAnzeigen(Number(t.dataset.zz));
     markiereZZ(Number(t.dataset.index));
     window.scrollTo({top:0,behavior:"smooth"});
     return;
@@ -2798,17 +3158,17 @@ document.addEventListener("click", ev=>{
   if(t.id === "exportBtn"){
     const f = document.getElementById("transferFeld");
     f.style.display = "block"; f.value = JSON.stringify(S); f.select();
-    try{ document.execCommand("copy"); status("Spielstand kopiert."); }
-    catch(e){ status("Text markiert – jetzt kopieren."); }
+    try{ document.execCommand("copy"); status("Spielstand kopiert.", true); }
+    catch(e){ status("Text markiert – jetzt kopieren.", true); }
     return;
   }
   if(t.id === "importBtn"){
     const f = document.getElementById("transferFeld");
-    if(f.style.display === "none"){ f.style.display = "block"; f.value = ""; f.focus(); status("Spielstand einfügen und erneut tippen."); return; }
+    if(f.style.display === "none"){ f.style.display = "block"; f.value = ""; f.focus(); status("Spielstand einfügen und erneut tippen.", true); return; }
     try{
       S = Object.assign(JSON.parse(JSON.stringify(STANDARD)), JSON.parse(f.value));
-      angleichen(); f.style.display = "none"; zeichne(); sichern(); status("Spielstand übernommen.");
-    }catch(e){ status("Der eingefügte Text ist kein gültiger Spielstand."); }
+      angleichen(); f.style.display = "none"; zeichne(); sichern(); status("Spielstand übernommen.", true);
+    }catch(e){ status("Der eingefügte Text ist kein gültiger Spielstand.", true); }
     return;
   }
   if(t.id === "resetBtn"){
@@ -2837,10 +3197,11 @@ document.addEventListener("change", ev=>{
   if(e.id === "cbStrahl"){ S.strahlAktiv = e.checked; zeichneKopf(); aktualisiereCQ(); sichern(); return; }
   if(e.id === "cbImmun"){ S.immun = e.checked; zeichneKopf(); aktualisiereCQ(); sichern(); return; }
   if(e.id === "cbObjekt"){ S.objektGegner = e.checked; zeichne(); sichern(); return; }
+  if(e.id === "abschnittFeld"){ pfadMerken(); zeichnePfad(); sichern(); return; }
   if(e.dataset && e.dataset.bfert !== undefined){
     const ff = fertFeld(); if(!ff) return;
     ff.gewaehlt[Number(e.dataset.bidx)] = e.value || null;
-    if(fertPruefen()) status("Fertigkeiten ohne Vorstufe wurden entfernt.");
+    if(fertPruefen()) status("Fertigkeiten ohne Vorstufe wurden entfernt.", true);
     zeichne(); sichern(); return;
   }
 
@@ -2848,7 +3209,7 @@ document.addEventListener("change", ev=>{
     const d = BUCHDINGE[S.buchNr][Number(e.value)];
     formularFuellen(d.n, d.k === "S" ? "speziell" : "rucksack", d.e, d.w, d.p);
     e.value = "";
-    status(d.k === "S" ? "Spezieller Gegenstand – zählt nicht zu den 8." : "Rucksack-Gegenstand.");
+    status(d.k === "S" ? "Spezieller Gegenstand – zählt nicht zu den 8." : "Rucksack-Gegenstand.", true);
     return;
   }
   if(e.id === "katalogWahl" && e.value !== ""){
@@ -2897,9 +3258,10 @@ document.addEventListener("input", ev=>{
       grundwertSetzen("ap", e.value); apSetzen(apJetztWert()); zeichneKopf(); sichern(); break;
     case "apJetzt": apSetzen(Number(e.value||0)); zeichneKopf(); sichern(); break;
     case "abschnittFeld": S.abschnitt = Math.max(1, Number(e.value||1)); zeichneKopf(); sichern(); break;
-    case "feindName": S.feind.name = e.value; sichern(); break;
+    case "feindName": S.feind.name = e.value; zeichneBalken(); sichern(); break;
     case "feindKS": S.feind.ks = Number(e.value||0); aktualisiereCQ(); sichern(); break;
-    case "feindAP": S.feind.ap = Number(e.value||0); if(!S.runden.length) S.feind.apStart = S.feind.ap; sichern(); break;
+    case "feindAP": S.feind.ap = Number(e.value||0); if(!S.runden.length) S.feind.apStart = S.feind.ap;
+      zeichneBalken(); sichern(); break;
     case "modFeld": S.modifikator = Number(e.value||0); zeichneKopf(); aktualisiereCQ(); sichern(); break;
   }
 });
@@ -2933,7 +3295,18 @@ if("serviceWorker" in navigator && location.protocol.startsWith("http")){
   window.addEventListener("load", ()=> navigator.serviceWorker.register("./sw.js").catch(()=>{}));
 }
 
-(async function start(){ await laden(); Karte.binde(); zeichne(); })();
+window.addEventListener("scroll", ()=>{
+  const l = document.getElementById("kopfLeiste");
+  if(l) l.classList.toggle("sichtbar", window.scrollY > 190);
+}, {passive:true});
+
+(async function start(){
+  await laden();
+  themaAnwenden();
+  if(!S.pfad.length) pfadMerken();
+  Karte.binde();
+  zeichne();
+})();
 </script>
 </body>
 </html>
